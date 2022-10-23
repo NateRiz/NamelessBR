@@ -11,7 +11,6 @@ class Room(Actor):
         self.height = 1500
         self.surface = pygame.Surface((self.width, self.height))
 
-
     def draw(self, screen):
         background_color = (45, 45, 45)
         self.surface.fill(background_color)
