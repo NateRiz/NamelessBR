@@ -3,7 +3,7 @@ from typing import List
 
 import pygame
 
-import World
+from Engine import Game
 import Engine.Screen as Screen
 from Engine.Debug import debug
 from Engine.Layer import Layer
@@ -54,10 +54,13 @@ class Actor:
             Actor.drawable[self._draw_layer].remove(self)
 
     def get_world(self):
-        return World.World()
+        return Game.Game().world
 
     def get_screen(self):
         return Screen.Screen().screen
+
+    def send_to_server(self, message: dict):
+        return Game.Game().client.send(message)
 
     def set_draw_layer(self, layer):
         if self in Actor.drawable[self._draw_layer]:

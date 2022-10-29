@@ -6,6 +6,7 @@ from collections import deque
 from Engine.Actor import Actor
 from Engine.Camera import Camera
 from Engine.Layer import Layer
+from MessageMapper import MessageMapper
 
 
 class Player(Actor):
@@ -145,6 +146,9 @@ class Player(Actor):
 """
         self.pos[0] += self.velocity[0]
         self.pos[1] += self.velocity[1]
+
+        if any(self.velocity):
+            self.send_to_server({MessageMapper.MOVEMENT: [int(self.pos[0]), int(self.pos[1])]})
 
     def try_add_trail(self):
         if time() >= self.move_trail_last_record_time + self.move_trail_particle_cooldown:

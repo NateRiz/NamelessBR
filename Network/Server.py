@@ -21,7 +21,7 @@ class Server:
         Thread(target=self.listen).start()
 
     def listen(self):
-        max_connections = 1
+        max_connections = 2
         self.socket.settimeout(0.25)
         self.socket.listen(max_connections)
         print("Server started..")
@@ -41,6 +41,7 @@ class Server:
             message = self.get_next_message(client, incoming_stream)
             self.message_queue.append(Message(self.clients.index(client), message))
             print(f"Server << {message}")
+
     def get_next_message(self, client, incoming_stream) -> dict:
         header = self.get_bytes_from_stream(self.HEADER_SIZE, client, incoming_stream)
         message_size = int(header.strip())

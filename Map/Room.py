@@ -20,6 +20,6 @@ class Room(Actor):
             pygame.draw.rect(self.surface, (80, 80, 80), (0, i * dividers, self.width, 2))
         for i in range(self.width // dividers):
             pygame.draw.rect(self.surface, (80, 80, 80), (i * dividers, 0, 2, self.height))
-        pygame.draw.rect(self.surface, (0,249,255), (0, 0, self.width, self.height), 1)
+        pygame.draw.rect(self.surface, (0, 249, 255), (0, 0, self.width, self.height), 1)
 
         self.get_screen().blit(self.surface, self.player.offset_position)

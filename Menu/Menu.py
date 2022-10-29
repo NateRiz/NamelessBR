@@ -1,0 +1,97 @@
+import sys
+
+import pygame
+from pygame import locals
+from Engine.Screen import Screen
+from GUI.Button import Button
+from Menu.Lobby import Lobby
+from Menu.LobbyState import LobbyState
+
+
+class Menu:
+    def __init__(self):
+        self.screen = Screen().screen
+        self.lobby_state = LobbyState.MENU
+        self.chosen_lobby = LobbyState.MENU
+        self.animating_wall_rect: pygame.rect.Rect = None
+        self.play_button: Button = None
+        self.join_button: Button = None
+        self.host_button: Button = None
+        self.set_up_buttons()
+        self.buttons = [self.play_button, self.host_button, self.join_button]
+
+    def set_up_buttons(self):
+        center_x = self.screen.get_width() // 2
+        center_y = self.screen.get_height() // 2
+        size = [256, 96]
+        buffer = size[1] // 2
+        current_height = center_y - 200
+        self.play_button = Button(
+            pygame.rect.Rect(center_x - size[0] // 2, current_height - size[1] // 2, size[0], size[1]),
+            lambda: print("clicked"), "Play")
+        current_height += size[1] + buffer
+        self.host_button = Button(
+            pygame.rect.Rect(center_x - size[0] // 2, current_height - size[1] // 2, size[0], size[1]),
+            self.on_click_host, "Host")
+        current_height += size[1] + buffer
+        self.join_button = Button(
+            pygame.rect.Rect(center_x - size[0] // 2, current_height - size[1] // 2, size[0], size[1]),
+            self.on_click_join, "Join")
+
+    def draw(self):
+        self.screen.fill((15, 15, 15))
+        for button in self.buttons:
+            button.draw(self.screen)
+
+        if self.animating_wall_rect:
+            pygame.draw.rect(self.screen, self.play_button.color, self.animating_wall_rect, 2)
+
+    def update(self):
+        if self.animating_wall_rect:
+            center_y = self.screen.get_height() // 2
+            y = center_y - Lobby.HEIGHT // 2
+            x = 32
+
+            move_px = 32
+            is_done = True
+            if self.animating_wall_rect.x > x:
+                self.animating_wall_rect.x = max(self.animating_wall_rect.x - move_px, x)
+                is_done = False
+            if self.animating_wall_rect.y > y:
+                self.animating_wall_rect.y = max(self.animating_wall_rect.y - move_px, y)
+                is_done = False
+            if self.animating_wall_rect.width < Lobby.WIDTH:
+                self.animating_wall_rect.width = min(self.animating_wall_rect.width + 2 * move_px, Lobby.WIDTH)
+                is_done = False
+            if self.animating_wall_rect.height < Lobby.HEIGHT:
+                self.animating_wall_rect.height = min(self.animating_wall_rect.height + 2 * move_px, Lobby.HEIGHT)
+                is_done = False
+            if is_done:
+                self.lobby_state = self.chosen_lobby
+
+
+    def on_click_join(self):
+        self.hide_and_disable_buttons()
+        self.transition_to_online_lobby(self.join_button.rect)
+        self.chosen_lobby = LobbyState.JOIN
+
+    def on_click_host(self):
+        self.hide_and_disable_buttons()
+        self.transition_to_online_lobby(self.host_button.rect)
+        self.chosen_lobby = LobbyState.HOST
+
+    def transition_to_online_lobby(self, rect):
+        self.animating_wall_rect = pygame.rect.Rect(rect)
+
+    def hide_and_disable_buttons(self):
+        for button in self.buttons:
+            button.set_disabled()
+            button.set_hidden(True)
+
+    def poll_input(self):
+        for event in pygame.event.get():
+            if event.type == locals.QUIT:
+                pygame.quit()
+                sys.exit()
+            for button in self.buttons:
+                button.poll_input(event)

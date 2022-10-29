@@ -1,9 +1,7 @@
-from Engine.Game import Game
-
+from Engine.GameState import GameState
 
 def main():
-    game = Game()
-    game.main_loop()
+    GameState().start()
 
 if __name__ == '__main__':
     main()

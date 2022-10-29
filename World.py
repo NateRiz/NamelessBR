@@ -6,7 +6,6 @@ import Player as Player
 
 class World(metaclass=Singleton):
     def __init__(self):
-        Actor.ActorManager.static_init_actor()
         self.player = Player.Player()
         self.room = Room.Room(self.player)
         self.is_debug = False
