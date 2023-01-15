@@ -2,6 +2,7 @@ from Engine import Actor
 from Engine.Singleton import Singleton
 import Map.Room as Room
 import Player as Player
+from ServerLogic import ServerLogic
 
 
 class World(metaclass=Singleton):
@@ -9,6 +10,7 @@ class World(metaclass=Singleton):
         self.player = Player.Player()
         self.room = Room.Room(self.player)
         self.is_debug = False
+        self.server_logic = ServerLogic()
 
     def poll_input(self, event):
         Actor.ActorManager.poll_input_all(event)

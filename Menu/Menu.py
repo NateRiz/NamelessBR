@@ -78,7 +78,6 @@ class Menu:
     def on_click_host(self):
         self.hide_and_disable_buttons()
         self.network.create_host()
-        self.network.create_client("127.0.0.1", 7777)
         self.transition_to_online_lobby(self.host_button.rect)
         self.chosen_lobby = LobbyState.TRANSITION_TO_HOST
 

@@ -1,6 +1,8 @@
 import json
 import socket
 from threading import Thread
+from typing import Dict
+
 from Networking.AtomicDeque import AtomicDeque
 from collections import deque
 from time import time
@@ -24,9 +26,6 @@ class Server:
 
         Thread(target=self._listen).start()
 
-    def get_connected(self):
-        return len(self.clients)
-
     def get_next_message(self) -> Message:
         if len(self.message_queue):
             return self.message_queue.popleft()
@@ -39,10 +38,37 @@ class Server:
             self.metric_num_bytes = 0
         return round(self.metric_last_kb / 1024, 2)
 
+    def send(self, message: Dict, owner_id):
+        raw_message = json.dumps(message)
+        message_size = len(raw_message)
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+
+        self.clients[owner_id].send(padded_header.encode())
+        self.clients[owner_id].send(raw_message.encode())
+
+    def send_all(self, message: Dict):
+        raw_message = json.dumps(message)
+        message_size = len(raw_message)
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+
+        for owner_id, conn in self.clients.items():
+            conn.send(padded_header.encode())
+            conn.send(raw_message.encode())
+
+    def send_all_except(self, message: Dict, excluded_id):
+        raw_message = json.dumps(message)
+        message_size = len(raw_message)
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+
+        for owner_id, conn in self.clients.items():
+            if owner_id != excluded_id:
+                conn.send(padded_header.encode())
+                conn.send(raw_message.encode())
+
     def _listen(self):
         max_connections = 5
         client_id_incrementer = 0
-        self.socket.settimeout(0.25)
+        # self.socket.settimeout(0.25)
         self.socket.listen(max_connections)
         print("Server started..")
 
@@ -52,7 +78,6 @@ class Server:
                 print(conn)
                 self.clients[client_id_incrementer] = conn
                 Thread(target=self._poll, args=(conn, client_id_incrementer)).start()
-                self.message_queue.append(Message(client_id_incrementer, {"on_connect": None}))
                 client_id_incrementer += 1
                 print(f"New connection: {addr}")
             except TimeoutError:
@@ -63,13 +88,13 @@ class Server:
         while True:
             message = self._get_next_message(client, incoming_stream)
             self.message_queue.append(Message(owner_id, message))
-            # print(f"Server << {message}")
 
     def _get_next_message(self, client, incoming_stream) -> dict:
-        header = self._get_bytes_from_stream(self.HEADER_SIZE, client, incoming_stream)
+        header = self._get_bytes_from_stream(Server.HEADER_SIZE, client, incoming_stream)
         message_size = int(header.strip())
         data = self._get_bytes_from_stream(message_size, client, incoming_stream)
         self.metric_num_bytes += len(data)
+        print(data)
         return json.loads(data)
 
     def _get_bytes_from_stream(self, num_bytes, client, incoming_stream: deque) -> str:
@@ -95,9 +120,11 @@ class Server:
     def _receive_next_packet(self, client, incoming_stream):
         try:
             data = client.recv(Server.BUF_SIZE)
+            if data:
+                incoming_stream.append(data)
         except ConnectionError:
             print(f"Connection removed with {socket.gethostbyname(socket.gethostname())}")
             return
-
-        if data:
-            incoming_stream.append(data)
+        except TimeoutError:
+            print("Server socket timeout")
+            pass

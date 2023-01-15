@@ -1,6 +1,9 @@
 class MessageMapper:
     NONE = 0
-    MOVEMENT = 1
+    SYNC_CLIENTS_REQUEST = 1
+    SYNC_CLIENTS_RESPONSE = 2
+    MOVEMENT = 3
+
 
     def __init__(self):
         self.map = {}

@@ -45,6 +45,6 @@ class Game(metaclass=Singleton):
         pygame.display.flip()
 
     def get_server_metrics(self):
-        bytes = self.network.server.get_incoming_kb_metric()
-        if bytes:
-            print(f'{bytes} KB')
+        kb = self.network.server.get_incoming_kb_metric()
+        if kb:
+            print(f'{kb} KB')

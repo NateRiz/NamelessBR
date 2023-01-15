@@ -47,6 +47,7 @@ class GameState:
             pygame.display.flip()
 
     def host_loop(self):
+        self.lobby.connect_to_host()
         self.lobby_state.set(LobbyState.HOST)
         while self.lobby_state.lobby_state == LobbyState.HOST:
             self.clock.tick(60)

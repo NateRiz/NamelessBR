@@ -16,8 +16,9 @@ class PlayerContainer:
         for rect in self.containers.values():
             pygame.draw.rect(screen, (220, 220, 15), rect, 2, 8)
 
-    def add_player(self, owner_id):
-        self.containers[owner_id] = pygame.rect.Rect(0, 0, 0, 0)
+    def update_players(self, player_ids):
+        for i in player_ids:
+            self.containers[i] = pygame.rect.Rect(0, 0, 0, 0)
         self._recalculate_bounds()
 
     def _recalculate_bounds(self):

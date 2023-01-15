@@ -11,4 +11,5 @@ class Network:
         self.server = Server()
 
     def create_client(self, ip, port):
-        self.client = Client(ip, port)
+        self.client = Client()
+        self.client.connect(ip, port)
