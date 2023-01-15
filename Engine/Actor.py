@@ -1,12 +1,11 @@
 import weakref
 from typing import List
-
 import pygame
 
-from Engine import Game
-import Engine.Screen as Screen
 from Engine.Debug import debug
+from Engine.Game import Game
 from Engine.Layer import Layer
+from Engine.Screen import Screen
 
 
 class ActorManager:
@@ -18,7 +17,7 @@ class ActorManager:
     def draw_all():
         for layer in Actor.drawable:
             for actor in layer:
-                actor.draw(Screen.Screen().screen)
+                actor.draw(Screen().screen)
                 ActorManager._draw_collision_if_debug(actor)
 
     @staticmethod
@@ -54,13 +53,13 @@ class Actor:
             Actor.drawable[self._draw_layer].remove(self)
 
     def get_world(self):
-        return Game.Game().world
+        return Game().world
 
     def get_screen(self):
-        return Screen.Screen().screen
+        return Screen().screen
 
     def send_to_server(self, message: dict):
-        return Game.Game().client.send(message)
+        return Game().network.client.send(message)
 
     def set_draw_layer(self, layer):
         if self in Actor.drawable[self._draw_layer]:

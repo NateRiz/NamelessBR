@@ -9,14 +9,15 @@ from Menu.LobbyState import LobbyState
 
 
 class Menu:
-    def __init__(self):
+    def __init__(self, network, lobby_state):
+        self.network = network
+        self.lobby_state = lobby_state
         self.screen = Screen().screen
-        self.lobby_state = LobbyState.MENU
-        self.chosen_lobby = LobbyState.MENU
         self.animating_wall_rect: pygame.rect.Rect = None
         self.play_button: Button = None
         self.join_button: Button = None
         self.host_button: Button = None
+        self.chosen_lobby = LobbyState.TRANSITION_TO_JOIN
         self.set_up_buttons()
         self.buttons = [self.play_button, self.host_button, self.join_button]
 
@@ -67,18 +68,19 @@ class Menu:
                 self.animating_wall_rect.height = min(self.animating_wall_rect.height + 2 * move_px, Lobby.HEIGHT)
                 is_done = False
             if is_done:
-                self.lobby_state = self.chosen_lobby
-
+                self.lobby_state.set(self.chosen_lobby)
 
     def on_click_join(self):
         self.hide_and_disable_buttons()
         self.transition_to_online_lobby(self.join_button.rect)
-        self.chosen_lobby = LobbyState.JOIN
+        self.chosen_lobby = LobbyState.TRANSITION_TO_JOIN
 
     def on_click_host(self):
         self.hide_and_disable_buttons()
+        self.network.create_host()
+        self.network.create_client("127.0.0.1", 7777)
         self.transition_to_online_lobby(self.host_button.rect)
-        self.chosen_lobby = LobbyState.HOST
+        self.chosen_lobby = LobbyState.TRANSITION_TO_HOST
 
     def transition_to_online_lobby(self, rect):
         self.animating_wall_rect = pygame.rect.Rect(rect)

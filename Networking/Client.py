@@ -2,13 +2,13 @@ import json
 import socket
 from typing import Dict
 
-from Network.Server import Server
+from Networking.Server import Server
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, ip, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(("127.0.0.1", 7777))
+        self.socket.connect((ip, port))
 
     def send(self, message: Dict):
         raw_message = json.dumps(message)
