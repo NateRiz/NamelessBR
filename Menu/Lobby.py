@@ -30,16 +30,19 @@ class Lobby:
     def update(self):
         if self.is_host():
             message = self.network.server.get_next_message()
-            if message and MessageMapper.SYNC_CLIENTS_REQUEST in message.message:
-                self.network.server.send_all({MessageMapper.SYNC_CLIENTS_RESPONSE: list(self.network.server.clients.keys())})
+            if message and MessageMapper.LIST_CLIENTS_REQUEST in message.message:
+                self.network.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: list(self.network.server.clients.keys())})
             if len(self.network.server.clients) > 1:
                 self.start_button.set_hidden(False)
                 self.start_button.set_enabled()
 
         if self.is_connected():
             message = self.network.client.get_next_message()
-            if message and MessageMapper.SYNC_CLIENTS_RESPONSE in message.message:
-                self.player_container.update_players(message.message[MessageMapper.SYNC_CLIENTS_RESPONSE])
+            if message:
+                if MessageMapper.START in message.message:
+                    self.lobby_state.lobby_state = LobbyState.TRANSITION_TO_GAME
+                if MessageMapper.LIST_CLIENTS_RESPONSE in message.message:
+                    self.player_container.update_players(message.message[MessageMapper.LIST_CLIENTS_RESPONSE])
 
     def draw(self):
         screen = Screen().screen
@@ -69,7 +72,7 @@ class Lobby:
 
     def connect_to_host(self):
         self.network.create_client(self.ip_input.value, 7777)
-        self.network.client.send({MessageMapper.SYNC_CLIENTS_REQUEST: None})
+        self.network.client.send({MessageMapper.LIST_CLIENTS_REQUEST: None})
 
     def is_connected(self):
         return self.network.client is not None
@@ -99,4 +102,4 @@ class Lobby:
         return ip_x, y, ip_w, start_y
 
     def _start_game(self):
-        self.lobby_state.lobby_state = LobbyState.TRANSITION_TO_GAME
+        self.network.server.send_all({MessageMapper.START: None})

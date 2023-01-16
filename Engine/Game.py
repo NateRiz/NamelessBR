@@ -9,7 +9,6 @@ import sys
 class Game(metaclass=Singleton):
     def __init__(self, network=None):
         super().__init__()
-        print(network)
         self.clock = pygame.time.Clock()
         self.fps = 60
         self.screen = Screen()
@@ -19,6 +18,7 @@ class Game(metaclass=Singleton):
 
     def main_loop(self, world):
         self.world = world
+        self.world.initial_sync()
         self.map_generator.generate()
         # self.map_generator.draw()
 
@@ -30,7 +30,6 @@ class Game(metaclass=Singleton):
     def update(self):
         self.clock.tick(self.fps)
         self.world.update()
-        self.get_server_metrics()
 
     def poll_input(self):
         for event in pygame.event.get():
@@ -43,8 +42,3 @@ class Game(metaclass=Singleton):
         self.screen.screen.fill((20, 20, 20))
         self.world.draw()
         pygame.display.flip()
-
-    def get_server_metrics(self):
-        kb = self.network.server.get_incoming_kb_metric()
-        if kb:
-            print(f'{kb} KB')

@@ -8,6 +8,7 @@ from collections import deque
 from time import time
 
 from Networking.Message import Message
+from Networking.Serializable import Serializable
 
 
 class Server:
@@ -39,31 +40,33 @@ class Server:
         return round(self.metric_last_kb / 1024, 2)
 
     def send(self, message: Dict, owner_id):
-        raw_message = json.dumps(message)
-        message_size = len(raw_message)
-        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+        padded_header, raw_message = self._encode_message(message)
+        print(F"S>{owner_id}: {message}")
 
-        self.clients[owner_id].send(padded_header.encode())
-        self.clients[owner_id].send(raw_message.encode())
+        self.clients[owner_id].send(padded_header)
+        self.clients[owner_id].send(raw_message)
 
     def send_all(self, message: Dict):
-        raw_message = json.dumps(message)
-        message_size = len(raw_message)
-        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+        padded_header, raw_message = self._encode_message(message)
+        print(F"SV>A: {message}")
 
         for owner_id, conn in self.clients.items():
-            conn.send(padded_header.encode())
-            conn.send(raw_message.encode())
+            conn.send(padded_header)
+            conn.send(raw_message)
 
     def send_all_except(self, message: Dict, excluded_id):
-        raw_message = json.dumps(message)
-        message_size = len(raw_message)
-        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
-
+        padded_header, raw_message = self._encode_message(message)
+        print(F"SV>A-{excluded_id}: {message}")
         for owner_id, conn in self.clients.items():
             if owner_id != excluded_id:
-                conn.send(padded_header.encode())
-                conn.send(raw_message.encode())
+                conn.send(padded_header)
+                conn.send(raw_message)
+
+    def _encode_message(self, message):
+        raw_message = json.dumps(message, default=Serializable.serialize)
+        message_size = len(raw_message)
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
+        return padded_header.encode(), raw_message.encode()
 
     def _listen(self):
         max_connections = 5
@@ -94,7 +97,6 @@ class Server:
         message_size = int(header.strip())
         data = self._get_bytes_from_stream(message_size, client, incoming_stream)
         self.metric_num_bytes += len(data)
-        print(data)
         return json.loads(data)
 
     def _get_bytes_from_stream(self, num_bytes, client, incoming_stream: deque) -> str:

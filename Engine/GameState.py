@@ -33,9 +33,7 @@ class GameState:
                     self.menu_loop()
                 case LobbyState.TRANSITION_TO_GAME:
                     self.game = Game(self.network)
-                    self.game.main_loop(World())
-
-
+                    self.game.main_loop(World(self.network))
 
     def menu_loop(self):
         self.lobby_state.set(LobbyState.MENU)
@@ -64,3 +62,4 @@ class GameState:
             self.lobby.update()
             self.lobby.draw()
             pygame.display.flip()
+

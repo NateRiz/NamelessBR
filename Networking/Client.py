@@ -6,6 +6,7 @@ from typing import Dict
 
 from Networking.AtomicDeque import AtomicDeque
 from Networking.Message import Message
+from Networking.Serializable import Serializable
 from Networking.Server import Server
 
 
@@ -20,13 +21,12 @@ class Client:
         Thread(target=self._poll).start()
 
     def send(self, message: Dict):
-        raw_message = json.dumps(message)
+        raw_message = json.dumps(message, default=Serializable.serialize)
         message_size = len(raw_message)
         padded_header = str(message_size).ljust(Server.HEADER_SIZE)
 
         self.socket.send(padded_header.encode())
         self.socket.send(raw_message.encode())
-        # print(f"Send: {message_size} {raw_message}")
 
     def get_next_message(self) -> Message:
         if len(self.message_queue):
@@ -38,7 +38,6 @@ class Client:
         while True:
             message = self._get_next_message(incoming_stream)
             self.message_queue.append(Message(-1, message))
-            # print(f"Server << {message}")
 
     def _get_next_message(self, incoming_stream) -> dict:
         header = self._get_bytes_from_stream(Server.HEADER_SIZE, incoming_stream)

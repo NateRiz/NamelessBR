@@ -7,13 +7,21 @@ from Engine.Actor import Actor
 from Engine.Camera import Camera
 from Engine.Layer import Layer
 from MessageMapper import MessageMapper
+from Serializable.Movement import Movement
 
 
 class Player(Actor):
-    def __init__(self):
+    def __init__(self, my_id, is_me):
         super().__init__()
-        self.set_draw_layer(Layer.PLAYER)
+        self.my_id = my_id
+        self.is_me = is_me  # Whether this is the actual player or someone else
+        if self.is_me:
+            self.set_draw_layer(Layer.PLAYER)
+        else:
+            self.set_draw_layer(Layer.ENEMY_PLAYER)
         self.camera = Camera()
+        # If this object hasn't changed, we wont send any update to the server
+        self.last_message_sent = None
         self.pos = [800, 500]
         self.triangle_size = 10
         self.collision_size = [6, 6]
@@ -54,11 +62,22 @@ class Player(Actor):
         abs_x, abs_y = self.pos
         return center_x - abs_x, center_y - abs_y
 
+    def get_current_room(self):
+        return self.get_world().room
+
     def draw(self, screen):
         self.draw_particles(screen)
-        center_x = self.get_screen().get_size()[0] // 2
-        center_y = self.get_screen().get_size()[1] // 2
-        pygame.draw.polygon(screen, (100, 255, 100), [(center_x + d[0], center_y + d[1]) for d in self.direction])
+        self.draw_player(screen)
+
+    def draw_player(self, screen):
+        if self.is_me:
+            center_x = self.get_screen().get_size()[0] // 2
+            center_y = self.get_screen().get_size()[1] // 2
+            pygame.draw.polygon(screen, (100, 255, 100), [(center_x + d[0], center_y + d[1]) for d in self.direction])
+        else:
+            pygame.draw.polygon(self.get_current_room().get_surface(), (100, 255, 100),
+                                [(self.pos[0] + d[0], self.pos[1] + d[1]) for d in
+                                 self.direction])
 
     def draw_particles(self, screen):
         for i, (pos, input_dir) in enumerate(self.move_trail):
@@ -76,6 +95,8 @@ class Player(Actor):
                 # pygame.draw.polygon(screen, (100, 255, 100), coords)
 
     def poll_input(self, event):
+        if not self.is_me:
+            return
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
                 self.input[1] -= 1
@@ -102,6 +123,7 @@ class Player(Actor):
     def update(self):
         self.move()
         self.try_add_trail()
+        self.send_updates_to_server()
 
     def move(self):
         normalized_input = [0, 0]
@@ -147,8 +169,16 @@ class Player(Actor):
         self.pos[0] += self.velocity[0]
         self.pos[1] += self.velocity[1]
 
-        if any(self.velocity):
-            self.send_to_server({MessageMapper.MOVEMENT: [int(self.pos[0]), int(self.pos[1])]})
+    def send_updates_to_server(self):
+        if not self.is_me:
+            return
+
+        if self.last_message_sent is not None and int(self.pos[0]) == self.last_message_sent.pos[0] and int(self.pos[1]) == \
+                self.last_message_sent.pos[1] and self.input == self.last_message_sent.direction:
+            return
+
+        self.last_message_sent = Movement(self.my_id, [int(self.pos[0]), int(self.pos[1])], self.input)
+        self.send_to_server({MessageMapper.MOVEMENT: self.last_message_sent})
 
     def try_add_trail(self):
         if time() >= self.move_trail_last_record_time + self.move_trail_particle_cooldown:
@@ -159,3 +189,10 @@ class Player(Actor):
         if time() >= self.dash_last_time + self.dash_cooldown:
             self.dash_last_time = time()
             self.is_dashing = True
+
+    ############################
+    # Below is called by server
+    ############################
+    def server_move_to(self, pos, input_direction):
+        self.pos = pos
+        self.input = input_direction

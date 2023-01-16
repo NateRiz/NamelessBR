@@ -1,7 +1,6 @@
 import pygame
 
 from Engine.Actor import Actor
-from Engine.Debug import debug
 from Engine.Layer import Layer
 
 

@@ -6,5 +6,8 @@ class Layer(IntEnum):
     GROUND = 1
     STRUCTURE = 2
     ENEMY = 3
-    PLAYER = 4
-    DEBUG = 5
+    ENEMY_PLAYER = 4
+    # Objects draw themselves to a room and the room draws the objects at the end of the frame.
+    ROOM = 5
+    PLAYER = 6
+    DEBUG = 7

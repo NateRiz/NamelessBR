@@ -22,7 +22,8 @@ class ActorManager:
 
     @staticmethod
     def update_all():
-        for actor in Actor.actors:
+        actors_to_update = list(Actor.actors)
+        for actor in actors_to_update:
             actor.update()
 
     @staticmethod
