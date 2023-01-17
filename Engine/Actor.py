@@ -1,5 +1,5 @@
 import weakref
-from typing import List, Dict, Any
+from typing import List, Dict
 import pygame
 
 from Engine.Debug import debug

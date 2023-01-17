@@ -1,8 +1,10 @@
 from collections import deque
 
 
-# Wrapper class that only allows for atomic operations
 class AtomicDeque:
+    """
+    Wrapper class that only allows for atomic operations
+    """
     def __init__(self):
         self._deque = deque()
 
@@ -11,7 +13,10 @@ class AtomicDeque:
         return self._deque.append(__x)
 
     def appendleft(self, __x) -> None:
-        """Extra section of packet will be pushed back to the top"""
+        """
+        Extra section of packet will be pushed back to the top
+        :param __x: x
+        """
         return self._deque.appendleft(__x)
 
     def pop(self):
@@ -30,4 +35,3 @@ class AtomicDeque:
 
     def __repr__(self):
         return repr(self._deque)
-

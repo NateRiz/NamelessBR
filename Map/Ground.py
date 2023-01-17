@@ -5,12 +5,19 @@ from Engine.Layer import Layer
 
 
 class Ground(Actor):
+    """
+    Bottom ground layer in a room to start drawing.
+    """
     def __init__(self, surface):
         super().__init__()
         self.set_draw_layer(Layer.GROUND)
         self.surface = surface
 
     def draw(self, screen):
+        """
+        Clears the surface and draws the bottom layer ground.
+        :param screen: pygame screen to draw to
+        """
         width, height = self.surface.get_size()
         background_color = (45, 45, 45)
         self.surface.fill(background_color)

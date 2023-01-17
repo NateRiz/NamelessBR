@@ -18,16 +18,19 @@ class ServerLogic(Actor):
         })
 
     def update(self):
+        """
+        Gets all queued messages from clients and dispatches them.
+        """
         server = self.get_world().network.server
         if server is None:
             return
 
         message = server.get_next_message()
         while message is not None:
-            self.dispatch(message)
+            self._dispatch(message)
             message = server.get_next_message()
 
-    def dispatch(self, message):
+    def _dispatch(self, message):
         for message_type, msg in message.message.items():
             self._dispatch_one(message_type, msg, message.owner_id)
 
