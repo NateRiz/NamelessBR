@@ -13,30 +13,44 @@ from Serializable.Movement import Movement
 class Player(Actor):
     def __init__(self, my_id, is_me):
         super().__init__()
-        self.my_id = my_id
+        self.my_id = my_id  # ID of the current player
         self.is_me = is_me  # Whether this is the actual player or someone else
         if self.is_me:
             self.set_draw_layer(Layer.PLAYER)
         else:
             self.set_draw_layer(Layer.ENEMY_PLAYER)
         self.camera = Camera()
-        self.pos = [800, 500]
+        self.pos = [800, 500]  # Absolute position in room
         self.triangle_size = 10
-        self.collision_size = [6, 6]
-        self.input = [0, 0]
+        self.collision_size = [6, 6]  # Marked by small square inside the player
+        self.input = [0, 0]  # WASD input. vector from -1,-1 to 1,1. 0,0 is standing still.
         self.velocity = [0, 0]
         self.max_speed = 10
         self.acceleration_rate = 1.8
         self.friction = 0.2
         self.direction_lookup = {
-            (0, -1): ((0, -self.triangle_size), (-10, 5), (10, 5)),  # N
-            (1, -1): ((7.5, -7.5), (-10, -7.5), (7.5, 10)),  # NE,
-            (1, 0): ((10, 0), (-5, -10), (-5, 10)),  # E
-            (1, 1): ((7.5, 7.5), (-10, 7.5), (7.5, -10)),  # SE
-            (0, 1): ((0, 10), (-10, -5), (10, -5)),  # S,
-            (-1, 1): ((-7.5, 7.5), (10, 7.5), (-7.5, -10)),  # SW,
-            (-1, 0): ((-10, 0), (5, -10), (5, 10)),  # W,
-            (-1, -1): ((-7.5, -7.5), (10, -7.5), (-7.5, 10)),  # NW,
+            (0, -1): ((0, -self.triangle_size), (-self.triangle_size, self.triangle_size // 2),
+                      (self.triangle_size, self.triangle_size // 2)),  # N
+            (1, -1): ((3 * self.triangle_size / 4, -3 * self.triangle_size / 4),
+                      (-self.triangle_size, -3 * self.triangle_size / 4),
+                      (3 * self.triangle_size / 4, self.triangle_size)),  # NE,
+            (1, 0): ((self.triangle_size, 0), (-self.triangle_size // 2, -self.triangle_size),
+                     (-self.triangle_size // 2, self.triangle_size)),  # E
+            (1, 1): (
+                (3 * self.triangle_size / 4, 3 * self.triangle_size / 4),
+                (-self.triangle_size, 3 * self.triangle_size / 4),
+                (3 * self.triangle_size / 4, -self.triangle_size)),  # SE
+            (0, 1): ((0, self.triangle_size), (-self.triangle_size, -self.triangle_size // 2),
+                     (self.triangle_size, -self.triangle_size // 2)),  # S,
+            (-1, 1): (
+                (-3 * self.triangle_size / 4, 3 * self.triangle_size / 4),
+                (self.triangle_size, 3 * self.triangle_size / 4),
+                (-3 * self.triangle_size / 4, -self.triangle_size)),  # SW,
+            (-1, 0): ((-self.triangle_size, 0), (self.triangle_size // 2, -self.triangle_size),
+                      (self.triangle_size // 2, self.triangle_size)),  # W,
+            (-1, -1): ((-3 * self.triangle_size / 4, -3 * self.triangle_size / 4),
+                       (self.triangle_size, -3 * self.triangle_size / 4),
+                       (-3 * self.triangle_size / 4, self.triangle_size)),  # NW,
         }
         self.direction = self.direction_lookup[(0, -1)]
 
@@ -52,13 +66,11 @@ class Player(Actor):
         ##############
         # Networking
         ##############
-        # If this object hasn't changed, we wont send any update to the server
-        self.last_message_sent = None
+        # Track the diff between messages sent to the server to reduce traffic
+        # Dummy numbers to ensure its updated first frame
+        self.last_message_sent = Movement(self.my_id, [-1, -1], [-9, -9])
+        # Time since the last position was sent. Don't send it every frame. Reduce traffic
         self.time_last_position_sent = time()
-
-    @property
-    def rect(self):
-        return pygame.rect.Rect(*self.pos, *self.collision_size)
 
     @property
     def offset_position(self):
@@ -75,11 +87,13 @@ class Player(Actor):
         self.draw_player(screen)
 
     def draw_player(self, screen):
+        # My player should always be drawn in the center of the screen. The room is drawn to offset me.
         if self.is_me:
             center_x = self.get_screen().get_size()[0] // 2
             center_y = self.get_screen().get_size()[1] // 2
             pygame.draw.polygon(screen, (100, 255, 100), [(center_x + d[0], center_y + d[1]) for d in self.direction])
         else:
+            # Draw other players directly into the room to later be offset
             pygame.draw.polygon(self.get_current_room().get_surface(), (100, 255, 100),
                                 [(self.pos[0] + d[0], self.pos[1] + d[1]) for d in
                                  self.direction])
@@ -89,14 +103,19 @@ class Player(Actor):
             if input_dir[0] or input_dir[1]:
                 direction = self.direction_lookup[input_dir]
                 offset = self.offset_position
-                coords = [(pos[0] + d[0] + offset[0], pos[1] + d[1] + offset[1]) for d in direction]
+                if self.is_me:
+                    coords = [(pos[0] + d[0] + offset[0], pos[1] + d[1] + offset[1]) for d in direction]
+                    surface_to_blit = screen
+                else:
+                    coords = [(pos[0] + d[0], pos[1] + d[1]) for d in direction]
+                    surface_to_blit = self.get_current_room().get_surface()
                 lx, ly = zip(*coords)
                 min_x, min_y, max_x, max_y = min(lx), min(ly), max(lx), max(ly)
                 target_rect = pygame.Rect(min_x, min_y, max_x - min_x, max_y - min_y)
                 shape_surf = pygame.Surface(target_rect.size, pygame.SRCALPHA)
                 pygame.draw.polygon(shape_surf, (100, 255, 100, 200 / (len(self.move_trail) - i)),
                                     [(x - min_x, y - min_y) for x, y in coords])
-                screen.blit(shape_surf, target_rect)
+                surface_to_blit.blit(shape_surf, target_rect)
                 # pygame.draw.polygon(screen, (100, 255, 100), coords)
 
     def poll_input(self, event):
@@ -181,25 +200,18 @@ class Player(Actor):
         should_send_message = False
         message = Movement(self.my_id)
 
-        if self.last_message_sent is None:
-            message = Movement(self.my_id, [int(self.pos[0]), int(self.pos[1])], list(self.input))
-            self.last_message_sent = message
+        if self.input != self.last_message_sent.direction:
+            message.direction = list(self.input)
+            self.last_message_sent.direction = list(message.direction)
             should_send_message = True
 
-        else:
-            if self.input != self.last_message_sent.direction:
-                message.direction = list(self.input)
-                self.last_message_sent.direction = list(message.direction)
-                should_send_message = True
-
-            time_between_movement_updates = 0.1
-            if time() - self.time_last_position_sent > time_between_movement_updates and (
-                    int(self.pos[0]) != self.last_message_sent.pos[0] or int(self.pos[1]) != self.last_message_sent.pos[
-                1]):
-                self.time_last_position_sent = time()
-                message.pos = [int(self.pos[0]), int(self.pos[1])]
-                self.last_message_sent.pos = list(message.pos)
-                should_send_message = True
+        time_between_movement_updates = 0.1
+        if time() - self.time_last_position_sent > time_between_movement_updates and (
+                int(self.pos[0]) != self.last_message_sent.pos[0] or int(self.pos[1]) != self.last_message_sent.pos[1]):
+            self.time_last_position_sent = time()
+            message.pos = [int(self.pos[0]), int(self.pos[1])]
+            self.last_message_sent.pos = list(message.pos)
+            should_send_message = True
 
         if should_send_message:
             self.send_to_server({MessageMapper.MOVEMENT: message})
