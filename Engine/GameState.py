@@ -13,7 +13,6 @@ from World import World
 class GameState:
     def __init__(self):
         pygame.init()
-        Actor.ActorManager.static_init_actor()
         self.clock = pygame.time.Clock()
         self.network = Network()
         self.lobby_state = LobbyStateContainer()
@@ -62,4 +61,3 @@ class GameState:
             self.lobby.update()
             self.lobby.draw()
             pygame.display.flip()
-

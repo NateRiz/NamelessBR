@@ -13,10 +13,10 @@ class Menu:
         self.network = network
         self.lobby_state = lobby_state
         self.screen = Screen().screen
-        self.animating_wall_rect: pygame.rect.Rect = None
-        self.play_button: Button = None
-        self.join_button: Button = None
-        self.host_button: Button = None
+        self.animating_wall_rect: pygame.rect.Rect | None = None
+        self.play_button: Button | None = None
+        self.join_button: Button | None = None
+        self.host_button: Button | None = None
         self.chosen_lobby = LobbyState.TRANSITION_TO_JOIN
         self.set_up_buttons()
         self.buttons = [self.play_button, self.host_button, self.join_button]

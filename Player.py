@@ -13,21 +13,21 @@ from Serializable.Movement import Movement
 class Player(Actor):
     def __init__(self, my_id, is_me):
         super().__init__()
-        self.my_id = my_id  # ID of the current player
-        self.is_me = is_me  # Whether this is the actual player or someone else
+        self.my_id: int = my_id  # ID of the current player
+        self.is_me: bool = is_me  # Whether this is the actual player or someone else
         if self.is_me:
             self.set_draw_layer(Layer.PLAYER)
         else:
             self.set_draw_layer(Layer.ENEMY_PLAYER)
         self.camera = Camera()
-        self.pos = [800, 500]  # Absolute position in room
-        self.triangle_size = 10
-        self.collision_size = [6, 6]  # Marked by small square inside the player
-        self.input = [0, 0]  # WASD input. vector from -1,-1 to 1,1. 0,0 is standing still.
-        self.velocity = [0, 0]
-        self.max_speed = 10
-        self.acceleration_rate = 1.8
-        self.friction = 0.2
+        self.pos: list = [800, 500]  # Absolute position in room
+        self.triangle_size: int = 10
+        self.collision_size: list = [6, 6]  # Marked by small square inside the player
+        self.input: list = [0, 0]  # WASD input. vector from -1,-1 to 1,1. 0,0 is standing still.
+        self.velocity: list = [0, 0]
+        self.max_speed: int = 10
+        self.acceleration_rate: float = 1.8
+        self.friction: float = 0.2
         self.direction_lookup = {
             (0, -1): ((0, -self.triangle_size), (-self.triangle_size, self.triangle_size // 2),
                       (self.triangle_size, self.triangle_size // 2)),  # N
@@ -52,16 +52,16 @@ class Player(Actor):
                        (self.triangle_size, -3 * self.triangle_size / 4),
                        (-3 * self.triangle_size / 4, self.triangle_size)),  # NW,
         }
-        self.direction = self.direction_lookup[(0, -1)]
+        self.direction: tuple = self.direction_lookup[(0, -1)]
 
         self.move_trail = deque([], maxlen=15)
-        self.move_trail_particle_cooldown = .02
+        self.move_trail_particle_cooldown: float = .02
         self.move_trail_last_record_time = time()
 
-        self.dash_cooldown = 2
-        self.dash_impulse_force = 25
+        self.dash_cooldown: int = 2
+        self.dash_impulse_force: int = 25
         self.dash_last_time = time()
-        self.is_dashing = False
+        self.is_dashing: bool = False
 
         ##############
         # Networking
@@ -70,7 +70,7 @@ class Player(Actor):
         # Dummy numbers to ensure its updated first frame
         self.last_message_sent = Movement(self.my_id, [-1, -1], [-9, -9])
         # Time since the last position was sent. Don't send it every frame. Reduce traffic
-        self.time_last_position_sent = time()
+        self.time_last_position_sent: float = time()
 
     @property
     def offset_position(self):

@@ -50,7 +50,7 @@ class MapGenerator:
         self._create_base_map()
 
     def _create_base_map(self):
-        self.map = [[None for i in range(self.map_length)] for _ in range(self.map_width)]
+        self.map = [[None for _ in range(self.map_length)] for _ in range(self.map_width)]
         self._place_players_and_end_room()
 
     def _place_players_and_end_room(self):

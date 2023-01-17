@@ -1,4 +1,10 @@
-class MessageMapper:
+from enum import IntEnum
+
+
+class MessageMapper(IntEnum):
+    """
+    Different message types to be sent over the socket
+    """
     NONE = 0
     LIST_CLIENTS_REQUEST = 1
     LIST_CLIENTS_RESPONSE = 2

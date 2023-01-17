@@ -9,6 +9,8 @@ from GUI.InputBox import InputBox
 from Menu.LobbyState import LobbyState
 from Menu.PlayerContainer import PlayerContainer
 from Networking.Network import Network
+from Serializable.Empty import Empty
+from Serializable.ListClientsResponse import ListClientsResponse
 
 
 class Lobby:
@@ -31,7 +33,8 @@ class Lobby:
         if self.is_host():
             message = self.network.server.get_next_message()
             if message and MessageMapper.LIST_CLIENTS_REQUEST in message.message:
-                self.network.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: list(self.network.server.clients.keys())})
+                self.network.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: ListClientsResponse(
+                    list(self.network.server.clients.keys()))})
             if len(self.network.server.clients) > 1:
                 self.start_button.set_hidden(False)
                 self.start_button.set_enabled()
@@ -42,7 +45,9 @@ class Lobby:
                 if MessageMapper.START in message.message:
                     self.lobby_state.lobby_state = LobbyState.TRANSITION_TO_GAME
                 if MessageMapper.LIST_CLIENTS_RESPONSE in message.message:
-                    self.player_container.update_players(message.message[MessageMapper.LIST_CLIENTS_RESPONSE])
+                    response = message.message[MessageMapper.LIST_CLIENTS_RESPONSE]
+                    player_ids = ListClientsResponse().load(response).clients
+                    self.player_container.update_players(player_ids)
 
     def draw(self):
         screen = Screen().screen
@@ -72,7 +77,7 @@ class Lobby:
 
     def connect_to_host(self):
         self.network.create_client(self.ip_input.value, 7777)
-        self.network.client.send({MessageMapper.LIST_CLIENTS_REQUEST: None})
+        self.network.client.send({MessageMapper.LIST_CLIENTS_REQUEST: Empty()})
 
     def is_connected(self):
         return self.network.client is not None
@@ -102,4 +107,4 @@ class Lobby:
         return ip_x, y, ip_w, start_y
 
     def _start_game(self):
-        self.network.server.send_all({MessageMapper.START: None})
+        self.network.server.send_all({MessageMapper.START: Empty()})

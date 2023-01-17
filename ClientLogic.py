@@ -28,11 +28,11 @@ class ClientLogic(Actor):
     def _dispatch_one(self, message_type, message, owner):
         self.callback_map[message_type](message_type, message, owner)
 
-    def _initial_sync_response(self, message_type, message, owner):
+    def _initial_sync_response(self, _message_type, message, _owner):
         response = InitialSyncResponse().load(message)
         self.get_world().on_initial_sync_response(response)
 
-    def _movement(self, message_type, message, owner):
+    def _movement(self, _message_type, message, _owner):
         response = Movement().load(message)
         self.get_world().players[response.my_id].server_move_to(response.pos, response.direction)
 

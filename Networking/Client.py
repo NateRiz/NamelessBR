@@ -12,6 +12,9 @@ from Networking.Server import Server
 
 
 class Client:
+    """
+    Client to connect over TCP
+    """
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.message_queue = AtomicDeque()
@@ -20,11 +23,20 @@ class Client:
         self.metric_last_kb = 0
 
     def connect(self, ip, port):
+        """
+        Tries to connect the client to the server
+        :param ip: Ip of host
+        :param port: Port of host
+        """
         self.socket.connect((ip, port))
         print("Client started..")
         Thread(target=self._poll).start()
 
-    def send(self, message: Dict):
+    def send(self, message: Dict[int, Serializable]):
+        """
+        Sends a json serializable object to the server
+        :param message: JSON serializable object
+        """
         raw_message = json.dumps(message, default=Serializable.serialize)
         message_size = len(raw_message)
         padded_header = str(message_size).ljust(Server.HEADER_SIZE)
@@ -32,12 +44,21 @@ class Client:
         self.socket.send(padded_header.encode())
         self.socket.send(raw_message.encode())
 
-    def get_next_message(self) -> Message:
+    def get_next_message(self) -> Message | None:
+        """
+        Gets the next message in the queue if there is one.
+        :return: next message in the queue
+        """
         if len(self.message_queue):
             return self.message_queue.popleft()
         return None
 
     def get_incoming_kb_metric(self):
+        """
+        Accumulates metric for data retrieved per second.
+        This must be called every frame by consumer
+        :return: Amount of data retrieved in Kb
+        """
         if time() - self.metric_last_record_time > 1:
             self.metric_last_record_time = time()
             self.metric_last_kb = self.metric_num_bytes
@@ -80,9 +101,8 @@ class Client:
     def _receive_next_packet(self, incoming_stream):
         try:
             data = self.socket.recv(Server.BUF_SIZE)
+            if data:
+                incoming_stream.append(data)
         except ConnectionError:
             print(f"Connection removed with {socket.gethostbyname(socket.gethostname())}")
             exit(-1)
-        if data:
-            incoming_stream.append(data)
-

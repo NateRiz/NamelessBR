@@ -1,12 +1,14 @@
 from collections import defaultdict
 
 from Engine.Actor import Actor
-from Engine.Game import Game
 from MessageMapper import MessageMapper
 from Serializable.InitialSyncResponse import InitialSyncResponse
 
 
 class ServerLogic(Actor):
+    """
+    Handles incoming messages from clients and dispatches to corresponding function
+    """
     def __init__(self):
         super().__init__()
         self.callback_map = defaultdict(lambda: self._unknown)
@@ -32,7 +34,7 @@ class ServerLogic(Actor):
     def _dispatch_one(self, message_type, message, owner):
         self.callback_map[message_type](message_type, message, owner)
 
-    def _initial_sync_request(self, message_type, message, owner):
+    def _initial_sync_request(self, _message_type, _message, owner):
         response = InitialSyncResponse(list(self.get_world().network.server.clients.keys()), owner)
         self.get_world().network.server.send({MessageMapper.INITIAL_SYNC_RESPONSE: response}, owner)
 

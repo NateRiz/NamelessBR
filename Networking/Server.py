@@ -12,6 +12,9 @@ from Networking.Serializable import Serializable
 
 
 class Server:
+    """
+    Host server that connects over tcp
+    """
     BUF_SIZE = 32
     HEADER_SIZE = 8  # Header contains length of packet
 
@@ -27,34 +30,58 @@ class Server:
 
         Thread(target=self._listen).start()
 
-    def get_next_message(self) -> Message:
+    def get_next_message(self) -> Message | None:
+        """
+        Gets the next message in the queue if there is one.
+        :return: next message in the queue
+        """
         if len(self.message_queue):
             return self.message_queue.popleft()
         return None
 
     def get_incoming_kb_metric(self):
+        """
+        Accumulates metric for data retrieved per second.
+        This must be called every frame by consumer
+        :return: Amount of data retrieved in Kb
+        """
         if time() - self.metric_last_record_time > 1:
             self.metric_last_record_time = time()
             self.metric_last_kb = self.metric_num_bytes
             self.metric_num_bytes = 0
         return round(self.metric_last_kb / 1024, 2)
 
-    def send(self, message: Dict, owner_id):
+    def send(self, message: Dict[int, Serializable], owner_id):
+        """
+        Sends a json serializable object to the specified client
+        :param message: JSON serializable object
+        :param owner_id: client to send to
+        """
         padded_header, raw_message = self._encode_message(message)
-        #print(F"S>{owner_id}: {message}")
+        # print(F"S>{owner_id}: {message}")
 
         self.clients[owner_id].send(padded_header)
         self.clients[owner_id].send(raw_message)
 
-    def send_all(self, message: Dict):
+    def send_all(self, message: Dict[int, Serializable]):
+        """
+        Sends a json serializable object to every client
+        :param message: JSON serializable object
+        """
         padded_header, raw_message = self._encode_message(message)
-        #print(F"SV>A: {message}")
+        # print(F"SV>A: {message}")
 
         for owner_id, conn in self.clients.items():
             conn.send(padded_header)
             conn.send(raw_message)
 
-    def send_all_except(self, message: Dict, excluded_id):
+    def send_all_except(self, message: Dict[int, Serializable], excluded_id):
+        """
+        Sends a json serializable object to all except the specific client
+        Used when a client doesn't want reflected data to cause jitter
+        :param message: JSON serializable object
+        :param excluded_id: client to exclude
+        """
         padded_header, raw_message = self._encode_message(message)
         print(F"SV>A-{excluded_id}: {message}")
         for owner_id, conn in self.clients.items():
@@ -71,7 +98,6 @@ class Server:
     def _listen(self):
         max_connections = 5
         client_id_incrementer = 0
-        # self.socket.settimeout(0.25)
         self.socket.listen(max_connections)
         print("Server started..")
 
