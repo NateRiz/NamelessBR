@@ -2,6 +2,7 @@ import json
 import socket
 from collections import deque
 from threading import Thread
+from time import time
 from typing import Dict
 
 from Networking.AtomicDeque import AtomicDeque
@@ -14,6 +15,9 @@ class Client:
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.message_queue = AtomicDeque()
+        self.metric_last_record_time = time()
+        self.metric_num_bytes = 0
+        self.metric_last_kb = 0
 
     def connect(self, ip, port):
         self.socket.connect((ip, port))
@@ -33,6 +37,13 @@ class Client:
             return self.message_queue.popleft()
         return None
 
+    def get_incoming_kb_metric(self):
+        if time() - self.metric_last_record_time > 1:
+            self.metric_last_record_time = time()
+            self.metric_last_kb = self.metric_num_bytes
+            self.metric_num_bytes = 0
+        return round(self.metric_last_kb / 1024, 2)
+
     def _poll(self):
         incoming_stream = deque()
         while True:
@@ -43,6 +54,7 @@ class Client:
         header = self._get_bytes_from_stream(Server.HEADER_SIZE, incoming_stream)
         message_size = int(header.strip())
         data = self._get_bytes_from_stream(message_size, incoming_stream)
+        self.metric_num_bytes += len(data)
         return json.loads(data)
 
     def _get_bytes_from_stream(self, num_bytes, incoming_stream: deque) -> str:

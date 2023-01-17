@@ -19,6 +19,7 @@ class Debugger(Actor):
     def update(self):
         self.metrics["Player Id"] = self.get_world().my_id
         self.metrics["Server Incoming"] = F"{self.get_server_metrics()} KB/s"
+        self.metrics["Client Incoming"] = F"{self.get_client_metrics()} KB/s"
         self.metrics["Memory"] = F"{self.get_memory_usage()} MB"
 
     @debug
@@ -38,6 +39,9 @@ class Debugger(Actor):
         if not server:
             return 0
         return server.get_incoming_kb_metric()
+
+    def get_client_metrics(self):
+        return self.get_world().network.client.get_incoming_kb_metric()
 
     def get_memory_usage(self):
         process = psutil.Process(os.getpid())
