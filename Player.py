@@ -20,8 +20,6 @@ class Player(Actor):
         else:
             self.set_draw_layer(Layer.ENEMY_PLAYER)
         self.camera = Camera()
-        # If this object hasn't changed, we wont send any update to the server
-        self.last_message_sent = None
         self.pos = [800, 500]
         self.triangle_size = 10
         self.collision_size = [6, 6]
@@ -50,6 +48,13 @@ class Player(Actor):
         self.dash_impulse_force = 25
         self.dash_last_time = time()
         self.is_dashing = False
+
+        ##############
+        # Networking
+        ##############
+        # If this object hasn't changed, we wont send any update to the server
+        self.last_message_sent = None
+        self.time_last_position_sent = time()
 
     @property
     def rect(self):
@@ -165,7 +170,7 @@ class Player(Actor):
         pos[1] += self.velocity[1]
         if pygame.rect.Rect(*pos, *self.collision_size).collidelist(walls) != -1:
             self.velocity[1] = 0
-"""
+        """
         self.pos[0] += self.velocity[0]
         self.pos[1] += self.velocity[1]
 
@@ -173,12 +178,31 @@ class Player(Actor):
         if not self.is_me:
             return
 
-        if self.last_message_sent is not None and int(self.pos[0]) == self.last_message_sent.pos[0] and int(self.pos[1]) == \
-                self.last_message_sent.pos[1] and self.input == self.last_message_sent.direction:
-            return
+        should_send_message = False
+        message = Movement(self.my_id)
 
-        self.last_message_sent = Movement(self.my_id, [int(self.pos[0]), int(self.pos[1])], self.input)
-        self.send_to_server({MessageMapper.MOVEMENT: self.last_message_sent})
+        if self.last_message_sent is None:
+            message = Movement(self.my_id, [int(self.pos[0]), int(self.pos[1])], list(self.input))
+            self.last_message_sent = message
+            should_send_message = True
+
+        else:
+            if self.input != self.last_message_sent.direction:
+                message.direction = list(self.input)
+                self.last_message_sent.direction = list(message.direction)
+                should_send_message = True
+
+            time_between_movement_updates = 0.1
+            if time() - self.time_last_position_sent > time_between_movement_updates and (
+                    int(self.pos[0]) != self.last_message_sent.pos[0] or int(self.pos[1]) != self.last_message_sent.pos[
+                1]):
+                self.time_last_position_sent = time()
+                message.pos = [int(self.pos[0]), int(self.pos[1])]
+                self.last_message_sent.pos = list(message.pos)
+                should_send_message = True
+
+        if should_send_message:
+            self.send_to_server({MessageMapper.MOVEMENT: message})
 
     def try_add_trail(self):
         if time() >= self.move_trail_last_record_time + self.move_trail_particle_cooldown:
@@ -194,5 +218,7 @@ class Player(Actor):
     # Below is called by server
     ############################
     def server_move_to(self, pos, input_direction):
-        self.pos = pos
-        self.input = input_direction
+        if pos:
+            self.pos = pos
+        if input_direction:
+            self.input = input_direction

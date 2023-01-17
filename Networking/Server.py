@@ -41,14 +41,14 @@ class Server:
 
     def send(self, message: Dict, owner_id):
         padded_header, raw_message = self._encode_message(message)
-        print(F"S>{owner_id}: {message}")
+        #print(F"S>{owner_id}: {message}")
 
         self.clients[owner_id].send(padded_header)
         self.clients[owner_id].send(raw_message)
 
     def send_all(self, message: Dict):
         padded_header, raw_message = self._encode_message(message)
-        print(F"SV>A: {message}")
+        #print(F"SV>A: {message}")
 
         for owner_id, conn in self.clients.items():
             conn.send(padded_header)
