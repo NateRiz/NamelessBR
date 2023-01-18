@@ -2,6 +2,9 @@ from Engine.GameState import GameState
 
 
 def main():
+    """
+    Main entry point
+    """
     GameState().start()
 
 

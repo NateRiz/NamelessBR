@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import DefaultDict, Callable
 
 from Engine.Actor import Actor
 from MessageMapper import MessageMapper
@@ -11,7 +12,8 @@ class ServerLogic(Actor):
     """
     def __init__(self):
         super().__init__()
-        self.callback_map = defaultdict(lambda: self._unknown)
+        self.callback_map: DefaultDict[int, Callable[[int, dict, int], None]] = defaultdict(
+            lambda: self._unknown)
         self.callback_map.update({
             MessageMapper.MOVEMENT: self._movement,
             MessageMapper.INITIAL_SYNC_REQUEST: self._initial_sync_request

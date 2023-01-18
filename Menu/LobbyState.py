@@ -2,6 +2,9 @@ from enum import Enum
 
 
 class LobbyState(Enum):
+    """
+    Helps navigate between menu and game screens.
+    """
     NONE = 0
     TRANSITION_TO_MENU = 1
     MENU = 2

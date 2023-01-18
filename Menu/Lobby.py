@@ -14,6 +14,9 @@ from Serializable.ListClientsResponse import ListClientsResponse
 
 
 class Lobby:
+    """
+    Multiplayer lobby to see connected clients
+    """
     WIDTH = 1400
     HEIGHT = 1000
 
@@ -30,7 +33,10 @@ class Lobby:
         self.player_container = PlayerContainer(self.network, screen_availability)
 
     def update(self):
-        if self.is_host():
+        """
+        Wait and handle server messages for adding clients and starting the game
+        """
+        if self._is_host():
             message = self.network.server.get_next_message()
             if message and MessageMapper.LIST_CLIENTS_REQUEST in message.message:
                 self.network.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: ListClientsResponse(
@@ -39,7 +45,7 @@ class Lobby:
                 self.start_button.set_hidden(False)
                 self.start_button.set_enabled()
 
-        if self.is_connected():
+        if self._is_connected():
             message = self.network.client.get_next_message()
             if message:
                 if MessageMapper.START in message.message:
@@ -50,20 +56,26 @@ class Lobby:
                     self.player_container.update_players(player_ids)
 
     def draw(self):
+        """
+        Draw the lobby
+        """
         screen = Screen().screen
         screen.fill((15, 15, 15))
 
         pygame.draw.rect(screen, (0, 245, 255), self.lobby_rect, 2, 8)
 
-        if self.is_host():
+        if self._is_host():
             self.start_button.draw(screen)
 
-        if self.is_connected():
+        if self._is_connected():
             self.player_container.draw(screen)
         else:
             self.ip_input.draw(screen)
 
     def poll_input(self):
+        """
+        polls input from the user
+        """
         for event in pygame.event.get():
             if event.type == locals.QUIT:
                 pygame.quit()
@@ -72,17 +84,20 @@ class Lobby:
             if self.start_button.is_enabled:
                 self.start_button.poll_input(event)
 
-            if not self.is_connected():
+            if not self._is_connected():
                 self.ip_input.poll_input(event)
 
     def connect_to_host(self):
+        """
+        Connects the client to the specified host
+        """
         self.network.create_client(self.ip_input.value, 7777)
         self.network.client.send({MessageMapper.LIST_CLIENTS_REQUEST: Empty()})
 
-    def is_connected(self):
+    def _is_connected(self):
         return self.network.client is not None
 
-    def is_host(self):
+    def _is_host(self):
         return self.network.server is not None
 
     def _setup_screen(self):

@@ -2,6 +2,9 @@ from enum import IntEnum
 
 
 class Layer(IntEnum):
+    """
+    Layers for sorted z-index drawing. Drawn in increasing order
+    """
     NONE = 0
     GROUND = 1
     STRUCTURE = 2
