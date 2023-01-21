@@ -21,7 +21,6 @@ class ActorManager:
         for layer in Actor.drawable:
             for actor in layer:
                 actor.draw(Screen().screen)
-                ActorManager._draw_collision_if_debug(actor)
 
     @staticmethod
     def update_all():
@@ -39,12 +38,6 @@ class ActorManager:
         """
         for actor in Actor.actors:
             actor.poll_input(event)
-
-    @staticmethod
-    @debug
-    def _draw_collision_if_debug(actor):
-        if hasattr(actor, "rect"):
-            pygame.draw.rect(actor.get_screen(), (0, 255, 255), actor.rect, 1)
 
 
 class Actor:

@@ -41,7 +41,7 @@ class ClientLogic(Actor):
         response = InitialSyncResponse().load(message)
         self.get_world().on_initial_sync_response(response)
 
-    def _movement(self, message_type: int, message: dict, _owner: int):
+    def _movement(self, _message_type: int, message: dict, _owner: int):
         response = Movement().load(message)
         self.get_world().players[response.my_id].server_move_to(response.pos, response.direction)
 

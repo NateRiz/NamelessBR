@@ -11,6 +11,7 @@ class Debugger(Actor):
     """
     Debugger panel with relative metrics. Default mapped to F12 once the game starts.
     """
+
     def __init__(self):
         super().__init__()
         self.set_draw_layer(Layer.DEBUG)
@@ -31,6 +32,22 @@ class Debugger(Actor):
 
     @debug
     def draw(self, screen):
+        self._draw_panel(screen)
+        self._draw_collision(screen)
+
+    def _draw_collision(self, screen):
+        player = self.get_world().get_my_player()
+        room = self.get_world().room
+        if not player:
+            return
+        for actor in self.actors:
+            if hasattr(actor, "rect"):
+                offset_x = player.offset_position[0] + actor.rect.x
+                offset_y = player.offset_position[1] + actor.rect.y
+                rect = pygame.rect.Rect(offset_x, offset_y, actor.rect.w, actor.rect.h)
+                pygame.draw.rect(screen, (255, 0, 100), rect, 1)
+
+    def _draw_panel(self, screen):
         """
         Draws panel and metrics to the screen
         :param screen: Pygame screen to draw on
@@ -56,4 +73,4 @@ class Debugger(Actor):
 
     def _get_memory_usage(self):
         process = psutil.Process(os.getpid())
-        return process.memory_info().rss // (1024*1024)
+        return process.memory_info().rss // (1024 * 1024)

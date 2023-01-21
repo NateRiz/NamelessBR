@@ -73,6 +73,11 @@ class Player(Actor):
         self.time_last_position_sent: float = time()
 
     @property
+    def rect(self):
+        return pygame.rect.Rect(self.pos[0] - self.collision_size[0] // 2, self.pos[1] - self.collision_size[1] // 2,
+                                *self.collision_size)
+
+    @property
     def offset_position(self):
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2

@@ -16,7 +16,7 @@ class World(metaclass=Singleton):
 
     def __init__(self, network):
         self.network = network
-        self.room = None
+        self.room = Room()
         self.players = {}
         self.is_debug = False
         self.server_logic = ServerLogic()
@@ -39,7 +39,15 @@ class World(metaclass=Singleton):
         self.my_id = initial_sync_response.my_id
         for p in initial_sync_response.players:
             self.players[p] = Player(p, p == self.my_id)
-        self.room = Room(self.players[self.my_id])
+
+    def get_my_player(self) -> Player | None:
+        """
+        Gets the local player.
+        :return: local Player or None if game hasn't had initial sync yet.
+        """
+        if self.my_id in self.players:
+            return self.players[self.my_id]
+        return None
 
     def poll_input(self, event):
         """

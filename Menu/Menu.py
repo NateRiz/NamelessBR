@@ -9,6 +9,9 @@ from Menu.LobbyState import LobbyState
 
 
 class Menu:
+    """
+    Startup menu for host and join
+    """
     def __init__(self, network, lobby_state):
         self.network = network
         self.lobby_state = lobby_state
@@ -18,10 +21,10 @@ class Menu:
         self.join_button: Button | None = None
         self.host_button: Button | None = None
         self.chosen_lobby = LobbyState.TRANSITION_TO_JOIN
-        self.set_up_buttons()
+        self._set_up_buttons()
         self.buttons = [self.play_button, self.host_button, self.join_button]
 
-    def set_up_buttons(self):
+    def _set_up_buttons(self):
         center_x = self.screen.get_width() // 2
         center_y = self.screen.get_height() // 2
         size = [256, 96]
@@ -33,13 +36,16 @@ class Menu:
         current_height += size[1] + buffer
         self.host_button = Button(
             pygame.rect.Rect(center_x - size[0] // 2, current_height - size[1] // 2, size[0], size[1]),
-            self.on_click_host, "Host")
+            self._on_click_host, "Host")
         current_height += size[1] + buffer
         self.join_button = Button(
             pygame.rect.Rect(center_x - size[0] // 2, current_height - size[1] // 2, size[0], size[1]),
-            self.on_click_join, "Join")
+            self._on_click_join, "Join")
 
     def draw(self):
+        """
+        Draw the buttons on the screen
+        """
         self.screen.fill((15, 15, 15))
         for button in self.buttons:
             button.draw(self.screen)
@@ -48,6 +54,9 @@ class Menu:
             pygame.draw.rect(self.screen, self.play_button.color, self.animating_wall_rect, 2)
 
     def update(self):
+        """
+        animate the buttons into the next screen
+        """
         if self.animating_wall_rect:
             center_y = self.screen.get_height() // 2
             y = center_y - Lobby.HEIGHT // 2
@@ -70,26 +79,29 @@ class Menu:
             if is_done:
                 self.lobby_state.set(self.chosen_lobby)
 
-    def on_click_join(self):
-        self.hide_and_disable_buttons()
-        self.transition_to_online_lobby(self.join_button.rect)
+    def _on_click_join(self):
+        self._hide_and_disable_buttons()
+        self._transition_to_online_lobby(self.join_button.rect)
         self.chosen_lobby = LobbyState.TRANSITION_TO_JOIN
 
-    def on_click_host(self):
-        self.hide_and_disable_buttons()
+    def _on_click_host(self):
+        self._hide_and_disable_buttons()
         self.network.create_host()
-        self.transition_to_online_lobby(self.host_button.rect)
+        self._transition_to_online_lobby(self.host_button.rect)
         self.chosen_lobby = LobbyState.TRANSITION_TO_HOST
 
-    def transition_to_online_lobby(self, rect):
+    def _transition_to_online_lobby(self, rect):
         self.animating_wall_rect = pygame.rect.Rect(rect)
 
-    def hide_and_disable_buttons(self):
+    def _hide_and_disable_buttons(self):
         for button in self.buttons:
             button.set_disabled()
             button.set_hidden(True)
 
     def poll_input(self):
+        """
+        Polls clicks for the buttons
+        """
         for event in pygame.event.get():
             if event.type == locals.QUIT:
                 pygame.quit()
