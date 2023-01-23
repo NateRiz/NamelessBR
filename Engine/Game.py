@@ -1,5 +1,4 @@
 from Engine.Singleton import Singleton
-from Map.MapGenerator import MapGenerator
 from Engine.Screen import Screen
 from pygame import locals
 import pygame
@@ -15,7 +14,6 @@ class Game(metaclass=Singleton):
         self.clock = pygame.time.Clock()
         self.fps = 60
         self.screen = Screen()
-        self.map_generator = MapGenerator(1)
         self.world = None
         self.network = network
 
@@ -26,8 +24,6 @@ class Game(metaclass=Singleton):
         """
         self.world = world
         self.world.initial_sync()
-        self.map_generator.generate()
-        # self.map_generator.draw()
 
         while 1:
             self._poll_input()

@@ -11,15 +11,15 @@ class Room(Actor):
     Contains a player and other entities
     """
 
-    def __init__(self):
+    def __init__(self, coordinates):
         super().__init__()
         self.set_draw_layer(Layer.ROOM)
+        self.coordinates = coordinates
         self.width = 2500
         self.height = 1500
         self.surface = pygame.Surface((self.width, self.height))
         self.ground = Ground(self.surface)
-        self.doors = [Door(self.surface, Door.NORTH), Door(self.surface, Door.EAST), Door(self.surface, Door.SOUTH),
-                      Door(self.surface, Door.WEST)]
+        self.doors = {}
 
     def draw(self, screen):
         """
@@ -47,3 +47,20 @@ class Room(Actor):
         :return: Offset surface
         """
         return self.surface
+
+    def add_doors(self):
+        """
+        Add doors so long as they lead to another room in the map.
+        """
+        map_size = len(self.get_world().map)
+        if self.coordinates[0] > 0:
+            self.doors[Door.NORTH] = Door(self.surface, Door.NORTH, (self.coordinates[0] - 1, self.coordinates[1]))
+
+        if self.coordinates[1] + 1 < map_size:
+            self.doors[Door.EAST] = Door(self.surface, Door.EAST, (self.coordinates[0], self.coordinates[1] + 1))
+
+        if self.coordinates[0] + 1 < map_size:
+            self.doors[Door.SOUTH] = Door(self.surface, Door.SOUTH, (self.coordinates[0] + 1, self.coordinates[1]))
+
+        if self.coordinates[1] > 0:
+            self.doors[Door.WEST] = Door(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))

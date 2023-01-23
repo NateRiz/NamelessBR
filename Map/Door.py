@@ -2,6 +2,8 @@ import pygame
 
 from Engine.Actor import Actor
 from Engine.Layer import Layer
+from MessageMapper import MessageMapper
+from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
 
 
 class Door(Actor):
@@ -10,11 +12,12 @@ class Door(Actor):
     SOUTH = 2
     WEST = 3
 
-    def __init__(self, surface, direction):
+    def __init__(self, surface, direction, connected_room_coordinates):
         super().__init__()
         self.set_draw_layer(Layer.STRUCTURE)
         self.surface = surface
         self.direction = direction
+        self.connecting_room_coordinates = connected_room_coordinates
         self.width = 80
         self.height = 10
         room_w, room_h = self.surface.get_size()
@@ -30,7 +33,7 @@ class Door(Actor):
         if not player:
             return
         if self.rect.colliderect(player.rect):
-            print("collide")
+            self.send_to_server({MessageMapper.CHANGE_ROOMS_REQUEST: ChangeRoomsRequest(self.connecting_room_coordinates)})
 
     def draw(self, screen):
         self._draw_doors()

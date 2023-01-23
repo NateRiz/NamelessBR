@@ -3,6 +3,7 @@ from Debugger import Debugger
 from Engine import Actor
 from Engine.Singleton import Singleton
 from Map.Room import Room
+from Menu.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
 from Serializable.InitialSyncResponse import InitialSyncResponse
@@ -16,11 +17,12 @@ class World(metaclass=Singleton):
 
     def __init__(self, network):
         self.network = network
-        self.room = Room()
+        self.room = None
         self.players = {}
         self.is_debug = False
         self.server_logic = ServerLogic()
         self.client_logic = ClientLogic()
+        self.map = None
         self.debugger = Debugger()
         self.my_id = -1
 
@@ -29,7 +31,6 @@ class World(metaclass=Singleton):
         Immediately called when the game starts to get all starting parameters
         """
         self.network.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
-        # self.room = Room.Room(self.player)
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):
         """
@@ -39,6 +40,8 @@ class World(metaclass=Singleton):
         self.my_id = initial_sync_response.my_id
         for p in initial_sync_response.players:
             self.players[p] = Player(p, p == self.my_id)
+        map_size = initial_sync_response.map_size
+        self.map = [[None for _ in range(map_size)] for _ in range(map_size)]
 
     def get_my_player(self) -> Player | None:
         """
@@ -48,6 +51,11 @@ class World(metaclass=Singleton):
         if self.my_id in self.players:
             return self.players[self.my_id]
         return None
+
+    def move_player_to_room(self, change_rooms_response):
+        src = self.room.coordinates if self.room else None
+        self.room = RoomFactory.create(change_rooms_response.room)
+        self.get_my_player().move_to_room(src, change_rooms_response.room.position)
 
     def poll_input(self, event):
         """

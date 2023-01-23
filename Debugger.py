@@ -29,6 +29,7 @@ class Debugger(Actor):
         self.metrics["Client Incoming"] = F"{self._get_client_metrics()} KB/s"
         self.metrics["Memory"] = F"{self._get_memory_usage()} MB"
         self.metrics["Actors"] = F"{len(Actor.actors)}"
+        self.metrics["Room"] = F"{self.get_world().room.coordinates}"
 
     @debug
     def draw(self, screen):

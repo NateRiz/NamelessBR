@@ -6,6 +6,7 @@ from collections import deque
 from Engine.Actor import Actor
 from Engine.Camera import Camera
 from Engine.Layer import Layer
+from Map.Door import Door
 from MessageMapper import MessageMapper
 from Serializable.Movement import Movement
 
@@ -230,6 +231,28 @@ class Player(Actor):
         if time() >= self.dash_last_time + self.dash_cooldown:
             self.dash_last_time = time()
             self.is_dashing = True
+
+    def move_to_room(self, src, dest):
+        if src is None:
+            self.pos = [800, 500]
+            return
+
+        src_y, src_x = src
+        dest_y, dest_x = dest
+        buffer = 32
+        current_room = self.get_current_room()
+        if dest_y - src_y == 1:  # move down
+            self.pos = list(current_room.doors[Door.NORTH].rect.center)
+            self.pos[1] += buffer
+        elif dest_y - src_y == -1:  # move up
+            self.pos = list(current_room.doors[Door.SOUTH].rect.center)
+            self.pos[1] -= buffer
+        elif dest_x - src_x == 1:  # move right
+            self.pos = list(current_room.doors[Door.WEST].rect.center)
+            self.pos[0] += buffer
+        elif dest_x - src_x == -1:  # move left
+            self.pos = list(current_room.doors[Door.EAST].rect.center)
+            self.pos[0] -= buffer
 
     ############################
     # Below is called by server

@@ -4,6 +4,7 @@ from typing import Callable, DefaultDict
 from Engine.Actor import Actor
 from MessageMapper import MessageMapper
 from Networking.Message import Message
+from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.Movement import Movement
 
@@ -19,6 +20,7 @@ class ClientLogic(Actor):
         self.callback_map.update({
             MessageMapper.INITIAL_SYNC_RESPONSE: self._initial_sync_response,
             MessageMapper.MOVEMENT: self._movement,
+            MessageMapper.CHANGE_ROOMS_RESPONSE: self._change_rooms_response,
         })
 
     def update(self):
@@ -44,6 +46,10 @@ class ClientLogic(Actor):
     def _movement(self, _message_type: int, message: dict, _owner: int):
         response = Movement().load(message)
         self.get_world().players[response.my_id].server_move_to(response.pos, response.direction)
+
+    def _change_rooms_response(self, _message_type: int, message: dict, _owner: int):
+        response = ChangeRoomsResponse().load(message)
+        self.get_world().move_player_to_room(response)
 
     def _unknown(self, message_type: int, message: dict, owner: int):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")

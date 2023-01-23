@@ -1,56 +1,57 @@
 from math import floor
-from random import randint
 import pygame
 from pygame.locals import QUIT
-
+from random import seed, randint, shuffle
+from ServerOwned.Room import Room
 
 class MapGenerator:
-    def __init__(self, num_players):
-        self.num_players = num_players
+    def __init__(self, player_ids):
         self.map_length = 30
         self.map_width = 30
         self.map = []
         self.end_room = [-1, -1]
-        self.players = [[-1, -1] for _ in range(self.num_players)]
+        self.players = {i: [-1, -1] for i in player_ids}
 
-    def draw(self):
-        # Pygame
+    def debug_draw_map(self):
         pygame.init()
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode((1920, 1080))
         while True:
             screen.fill((0, 0, 0))
-
             buffer = 2
             w_size = floor(screen.get_size()[0] / self.map_width) - buffer
             h_size = floor(screen.get_size()[1] / self.map_length) - buffer
             for i, row in enumerate(self.map):
-                for j, col in enumerate(row):
-                    color = (165, 165, 165)
-                    if col is None:
-                        color = (10, 10, 10)
+                for j, room in enumerate(row):
+                    seed(10 + room.difficulty)
+                    color = [randint(120, 200), randint(120, 200), randint(120, 200)]
+                    # shuffle(color)
                     pygame.draw.rect(screen, color,
                                      (j * (buffer + w_size), i * (buffer + h_size), w_size, h_size))
 
-            pygame.draw.rect(screen, (100, 255, 100), (
+            pygame.draw.rect(screen, (0, 255, 0), (
                 self.end_room[1] * (buffer + w_size), self.end_room[0] * (buffer + h_size), w_size, h_size))
 
             for player in self.players:
-                pygame.draw.rect(screen, (100, 100, 255), (
+                pygame.draw.rect(screen, (0, 0, 255), (
                     player[1] * (buffer + w_size), player[0] * (buffer + h_size), w_size, h_size))
 
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        return
 
             clock.tick()
             pygame.display.flip()
 
     def generate(self):
         self._create_base_map()
+        return self.map
 
     def _create_base_map(self):
-        self.map = [[None for _ in range(self.map_length)] for _ in range(self.map_width)]
+        self.map = [[Room((y, x), -1) for x in range(self.map_length)] for y in range(self.map_width)]
         self._place_players_and_end_room()
 
     def _place_players_and_end_room(self):
@@ -59,7 +60,9 @@ class MapGenerator:
         player_coord_generator = self._get_random_coordinate_on_next_side()
         while not are_entities_placed:
             are_entities_placed = True
-            self.end_room = [randint(1, len(self.map) - 2), randint(1, len(self.map[0]) - 2)]
+            end_room_distance_from_walls = 10
+            self.end_room = [randint(end_room_distance_from_walls, len(self.map) - end_room_distance_from_walls),
+                             randint(end_room_distance_from_walls, len(self.map[0]) - end_room_distance_from_walls)]
             self.players = [next(player_coord_generator) for _ in range(len(self.players))]
             entities = self.players + [self.end_room]
             for i, src in enumerate(entities[:-1]):
@@ -70,6 +73,11 @@ class MapGenerator:
                     if distance < min_spacing_distance:
                         are_entities_placed = False
                         break
+        min_difficulty = min_spacing_distance
+        for i, r in enumerate(self.map):
+            for j, rm in enumerate(r):
+                distance_from_end = abs(i - self.end_room[0]) + abs(j - self.end_room[1])
+                rm.difficulty = min(min_difficulty, distance_from_end)
 
     def _get_random_coordinate_on_next_side(self):
         while 1:
