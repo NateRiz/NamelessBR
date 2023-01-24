@@ -1,10 +1,9 @@
-import Serializable
 import Map
 
 
 class RoomFactory:
     @staticmethod
-    def create(serialized_room: Serializable.Room.Room) -> Map.Room.Room:
-        room = Map.Room.Room(serialized_room.position)
+    def create(coordinates: list) -> Map.Room.Room:
+        room = Map.Room.Room(coordinates)
         room.add_doors()
         return room

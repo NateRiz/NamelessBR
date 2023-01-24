@@ -40,7 +40,7 @@ class Client:
         raw_message = json.dumps(message, default=Serializable.serialize)
         message_size = len(raw_message)
         padded_header = str(message_size).ljust(Server.HEADER_SIZE)
-
+        print(f"C > {raw_message}")
         self.socket.send(padded_header.encode())
         self.socket.send(raw_message.encode())
 

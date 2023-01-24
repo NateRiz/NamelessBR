@@ -6,6 +6,7 @@ from Map.Room import Room
 from Menu.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
+from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 from ServerLogic import ServerLogic
 
@@ -18,7 +19,6 @@ class World(metaclass=Singleton):
     def __init__(self, network):
         self.network = network
         self.room = None
-        self.players = {}
         self.is_debug = False
         self.server_logic = ServerLogic()
         self.client_logic = ClientLogic()
@@ -26,10 +26,12 @@ class World(metaclass=Singleton):
         self.debugger = Debugger()
         self.my_id = -1
 
-    def initial_sync(self):
+    def on_start(self):
         """
-        Immediately called when the game starts to get all starting parameters
+        Immediately called once when the game starts
         """
+        if self.network.server:
+            self.server_logic.on_start()
         self.network.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):
@@ -38,8 +40,6 @@ class World(metaclass=Singleton):
         :param initial_sync_response: Parameters to start the game
         """
         self.my_id = initial_sync_response.my_id
-        for p in initial_sync_response.players:
-            self.players[p] = Player(p, p == self.my_id)
         map_size = initial_sync_response.map_size
         self.map = [[None for _ in range(map_size)] for _ in range(map_size)]
 
@@ -48,14 +48,23 @@ class World(metaclass=Singleton):
         Gets the local player.
         :return: local Player or None if game hasn't had initial sync yet.
         """
-        if self.my_id in self.players:
-            return self.players[self.my_id]
+        if self.my_id in self.room.players:
+            return self.room.players[self.my_id]
         return None
 
-    def move_player_to_room(self, change_rooms_response):
+    def move_player_to_room(self, change_rooms_response: ChangeRoomsResponse):
         src = self.room.coordinates if self.room else None
-        self.room = RoomFactory.create(change_rooms_response.room)
-        self.get_my_player().move_to_room(src, change_rooms_response.room.position)
+        self.room = RoomFactory.create(change_rooms_response.room_coordinates)
+        [self.room.add_player(player) for player in change_rooms_response.players]
+        if self.get_my_player() is not None:
+            self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
+
+    def get_pressed_input(self, pressed):
+        """
+        Forward all pressed keys to all actors
+        :param pressed: state of all keys
+        """
+        Actor.ActorManager.get_pressed_input_all(pressed)
 
     def poll_input(self, event):
         """

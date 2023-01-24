@@ -1,14 +1,10 @@
 from Networking.Serializable import Serializable
-from Serializable.Room import Room
 
 
 class ChangeRoomsResponse(Serializable):
     """
-    Sends surrounding rooms to client once rooms change.
+    Contains information on how to build a room for the client once they switch to a new room.
     """
-    def __init__(self, room=None):
-        self.room = room
-
-    def load(self, room: dict):
-        self.room = Room().load(room["room"])
-        return self
+    def __init__(self, room_coordinates=None, players=None):
+        self.room_coordinates = room_coordinates
+        self.players = players

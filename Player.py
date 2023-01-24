@@ -124,31 +124,23 @@ class Player(Actor):
                 surface_to_blit.blit(shape_surf, target_rect)
                 # pygame.draw.polygon(screen, (100, 255, 100), coords)
 
+    def get_pressed_input(self, pressed):
+        if not self.is_me:
+            return
+
+        self.input[0] = pressed[pygame.K_d] - pressed[pygame.K_a]
+        self.input[1] = pressed[pygame.K_s] - pressed[pygame.K_w]
+
     def poll_input(self, event):
         if not self.is_me:
             return
+
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_w:
-                self.input[1] -= 1
-            if event.key == pygame.K_s:
-                self.input[1] += 1
-            if event.key == pygame.K_a:
-                self.input[0] -= 1
-            if event.key == pygame.K_d:
-                self.input[0] += 1
             if event.key == pygame.K_j:
                 self.try_dash()
             if event.key == pygame.K_F12:
                 self.get_world().toggle_debug()
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_w:
-                self.input[1] += 1
-            if event.key == pygame.K_s:
-                self.input[1] -= 1
-            if event.key == pygame.K_a:
-                self.input[0] += 1
-            if event.key == pygame.K_d:
-                self.input[0] -= 1
+
 
     def update(self):
         self.move()
@@ -211,7 +203,7 @@ class Player(Actor):
             self.last_message_sent.direction = list(message.direction)
             should_send_message = True
 
-        time_between_movement_updates = 0.1
+        time_between_movement_updates = 0.01  # 100ms
         if time() - self.time_last_position_sent > time_between_movement_updates and (
                 int(self.pos[0]) != self.last_message_sent.pos[0] or int(self.pos[1]) != self.last_message_sent.pos[1]):
             self.time_last_position_sent = time()
@@ -232,7 +224,12 @@ class Player(Actor):
             self.dash_last_time = time()
             self.is_dashing = True
 
-    def move_to_room(self, src, dest):
+    def update_position_in_new_room(self, src, dest):
+        """
+        Moves player position from one door's to the opposite door's position when switching rooms.
+        :param src: room player is leaving
+        :param dest: room player is entering
+        """
         if src is None:
             self.pos = [800, 500]
             return
@@ -244,15 +241,19 @@ class Player(Actor):
         if dest_y - src_y == 1:  # move down
             self.pos = list(current_room.doors[Door.NORTH].rect.center)
             self.pos[1] += buffer
+            self.direction = self.direction_lookup[(0, -1)]
         elif dest_y - src_y == -1:  # move up
             self.pos = list(current_room.doors[Door.SOUTH].rect.center)
             self.pos[1] -= buffer
+            self.direction = self.direction_lookup[(0, 1)]
         elif dest_x - src_x == 1:  # move right
             self.pos = list(current_room.doors[Door.WEST].rect.center)
             self.pos[0] += buffer
+            self.direction = self.direction_lookup[(1, 0)]
         elif dest_x - src_x == -1:  # move left
             self.pos = list(current_room.doors[Door.EAST].rect.center)
             self.pos[0] -= buffer
+            self.direction = self.direction_lookup[(-1, 0)]
 
     ############################
     # Below is called by server

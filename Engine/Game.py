@@ -23,7 +23,7 @@ class Game(metaclass=Singleton):
         :param world: World singleton
         """
         self.world = world
-        self.world.initial_sync()
+        self.world.on_start()
 
         while 1:
             self._poll_input()
@@ -40,6 +40,7 @@ class Game(metaclass=Singleton):
                 pygame.quit()
                 sys.exit()
             self.world.poll_input(event)
+        self.world.get_pressed_input(pygame.key.get_pressed())
 
     def _draw(self):
         self.screen.screen.fill((20, 20, 20))

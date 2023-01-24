@@ -39,6 +39,14 @@ class ActorManager:
         for actor in Actor.actors:
             actor.poll_input(event)
 
+    @staticmethod
+    def get_pressed_input_all(pressed):
+        """
+        sends all pressed keys to all actors
+        :param pressed: state of all keys
+        """
+        for actor in Actor.actors:
+            actor.get_pressed_input(pressed)
 
 class Actor:
     """
@@ -100,6 +108,12 @@ class Actor:
     def poll_input(self, event):
         """
         Overridable poll placeholder
+        """
+        pass
+
+    def get_pressed_input(self, pressed):
+        """
+        Overridable get pressed keys
         """
         pass
 

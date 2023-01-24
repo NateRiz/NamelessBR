@@ -4,6 +4,7 @@ from Engine.Actor import Actor
 from Engine.Layer import Layer
 from Map.Door import Door
 from Map.Ground import Ground
+from Player import Player
 
 
 class Room(Actor):
@@ -20,6 +21,7 @@ class Room(Actor):
         self.surface = pygame.Surface((self.width, self.height))
         self.ground = Ground(self.surface)
         self.doors = {}
+        self.players = {}
 
     def draw(self, screen):
         """
@@ -64,3 +66,9 @@ class Room(Actor):
 
         if self.coordinates[1] > 0:
             self.doors[Door.WEST] = Door(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))
+
+    def add_player(self, player_id):
+        if player_id in self.players:
+            return
+        is_me = self.get_world().my_id == player_id
+        self.players[player_id] = Player(player_id, is_me)

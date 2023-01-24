@@ -1,6 +1,7 @@
 import pygame
 
 from Engine.Actor import Actor
+from Engine.Debug import debug
 from Engine.Layer import Layer
 from MessageMapper import MessageMapper
 from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
@@ -37,6 +38,19 @@ class Door(Actor):
 
     def draw(self, screen):
         self._draw_doors()
+
+    @debug
+    def poll_input(self, event):
+        request = {MessageMapper.CHANGE_ROOMS_REQUEST: ChangeRoomsRequest(self.connecting_room_coordinates)}
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_DOWN and self.direction == Door.SOUTH:
+                self.send_to_server(request)
+            if event.key == pygame.K_UP and self.direction == Door.NORTH:
+                self.send_to_server(request)
+            if event.key == pygame.K_RIGHT and self.direction == Door.EAST:
+                self.send_to_server(request)
+            if event.key == pygame.K_LEFT and self.direction == Door.WEST:
+                self.send_to_server(request)
 
     def _draw_doors(self):
         pygame.draw.rect(self.surface, (200, 200, 200), self.rect)
