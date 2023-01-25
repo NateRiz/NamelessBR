@@ -40,13 +40,14 @@ class Map:
         """
         self.players[player_id].position = position
 
-    def get_players_in_room(self, player_id):
+    def get_players_in_room(self, player_id) -> list[int]:
         """
         Gets a list of the other players in the same room as the given player. Excluding the given player
         :param player_id: player whose room we're taking from
         :return: list of other players in the same room
         """
         coordinate = self.players[player_id].map_coordinates
-        players_in_room = filter(lambda id_: id_ != player_id and self.players[id_].map_coordinates == coordinate,
-                                 self.players.keys())
-        return players_in_room
+        players_in_room = filter(
+            lambda id_: id_ != player_id and tuple(self.players[id_].map_coordinates) == tuple(coordinate),
+            self.players.keys())
+        return list(players_in_room)

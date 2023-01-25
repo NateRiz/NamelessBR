@@ -67,8 +67,9 @@ class Room(Actor):
         if self.coordinates[1] > 0:
             self.doors[Door.WEST] = Door(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))
 
-    def add_player(self, player_id):
+    def try_add_player(self, player_id, player):
         if player_id in self.players:
             return
         is_me = self.get_world().my_id == player_id
         self.players[player_id] = Player(player_id, is_me)
+        self.players[player_id].pos = player.position

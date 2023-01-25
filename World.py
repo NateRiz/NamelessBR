@@ -52,10 +52,12 @@ class World(metaclass=Singleton):
             return self.room.players[self.my_id]
         return None
 
-    def move_player_to_room(self, change_rooms_response: ChangeRoomsResponse):
+    def update_room(self, change_rooms_response: ChangeRoomsResponse):
         src = self.room.coordinates if self.room else None
-        self.room = RoomFactory.create(change_rooms_response.room_coordinates)
-        [self.room.add_player(player) for player in change_rooms_response.players]
+
+        if src != change_rooms_response.room_coordinates:
+            self.room = RoomFactory.create(change_rooms_response.room_coordinates)
+        [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
         if self.get_my_player() is not None:
             self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
 

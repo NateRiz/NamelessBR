@@ -45,11 +45,14 @@ class ClientLogic(Actor):
 
     def _movement(self, _message_type: int, message: dict, _owner: int):
         response = Movement().load(message)
-        self.get_world().players[response.my_id].server_move_to(response.pos, response.direction)
+        if response.my_id not in self.get_world().room.players:
+            print(f"Player {response.my_id} not in my room yet. Tried to move")
+            return
+        self.get_world().room.players[response.my_id].server_move_to(response.pos, response.direction)
 
-    def _change_rooms_response(self, _message_type: int, message: dict, _owner: int):
+    def _change_rooms_response(self, _message_type: int, message: dict, owner: int):
         response = ChangeRoomsResponse().load(message)
-        self.get_world().move_player_to_room(response)
+        self.get_world().update_room(response)
 
     def _unknown(self, message_type: int, message: dict, owner: int):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")

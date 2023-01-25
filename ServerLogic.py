@@ -7,6 +7,7 @@ from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.Movement import Movement
+import Serializable
 from ServerOwned.Map import Map
 from ServerOwned.ServerValidator import ServerValidator
 
@@ -57,9 +58,10 @@ class ServerLogic(Actor):
     def _initial_sync_request(self, _message_type, _message, owner):
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
+        serialized = {owner: Serializable.Player.Player(self.map.players[owner].position)}
         self.get_world().network.server.send(
             {MessageMapper.INITIAL_SYNC_RESPONSE: InitialSyncResponse(owner, len(self.map.map)),
-             MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, [owner])},
+             MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, serialized)},
             owner)
 
     def _movement(self, message_type, message, owner):
@@ -77,9 +79,11 @@ class ServerLogic(Actor):
         self.map.change_player_room(owner, request.destination)
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
-        players_in_room = list(master_room.players.keys())
-        self.get_world().network.server.send(
-            {MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, players_in_room)}, owner)
+        all_player_ids = self.map.get_players_in_room(owner) + [owner]
+        players = {p: Serializable.Player.Player(self.map.players[p].position) for p in all_player_ids}
+        for player in all_player_ids:
+            self.get_world().network.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
+                master_room.coordinates, players)}, player)
 
     def _unknown(self, message_type, message, owner):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")
