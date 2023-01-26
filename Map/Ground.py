@@ -1,7 +1,7 @@
 import pygame
 
 from Engine.Actor import Actor
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 
 
 class Ground(Actor):
@@ -10,7 +10,7 @@ class Ground(Actor):
     """
     def __init__(self, surface):
         super().__init__()
-        self.set_draw_layer(Layer.GROUND)
+        self.set_draw_layer(DrawLayer.GROUND)
         self.surface = surface
 
     def draw(self, screen):

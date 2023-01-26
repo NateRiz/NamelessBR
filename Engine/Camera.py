@@ -1,13 +1,13 @@
 import pygame
 
 from Engine.Actor import Actor
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 
 
 class Camera(Actor):
     def __init__(self):
         super().__init__()
-        self.set_draw_layer(Layer.DEBUG)
+        self.set_draw_layer(DrawLayer.DEBUG)
         width = self.get_screen().get_width() // 2
         height = self.get_screen().get_height() // 2
         x = self.get_screen().get_width() // 2 - width // 2

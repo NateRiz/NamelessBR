@@ -1,9 +1,10 @@
 import pygame
 
 from Engine.Actor import Actor
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
 from Map.Ground import Ground
+from Map.Wall import Wall
 from Player import Player
 
 
@@ -14,7 +15,7 @@ class Room(Actor):
 
     def __init__(self, coordinates):
         super().__init__()
-        self.set_draw_layer(Layer.ROOM)
+        self.set_draw_layer(DrawLayer.ROOM)
         self.coordinates = coordinates
         self.width = 2500
         self.height = 1500
@@ -22,6 +23,7 @@ class Room(Actor):
         self.ground = Ground(self.surface)
         self.doors = {}
         self.players = {}
+        self.walls = []
 
     def draw(self, screen):
         """
@@ -66,6 +68,15 @@ class Room(Actor):
 
         if self.coordinates[1] > 0:
             self.doors[Door.WEST] = Door(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))
+
+    def add_walls(self):
+        wall_size = 64
+        top = Wall(pygame.rect.Rect(0, -wall_size, self.width + wall_size, wall_size))
+        right = Wall(pygame.rect.Rect(self.width, 0, wall_size, self.height + wall_size))
+        left = Wall(pygame.rect.Rect(-wall_size, self.height, self.width + wall_size, wall_size))
+        bottom = Wall(pygame.rect.Rect(-wall_size, -wall_size, wall_size, self.height + wall_size))
+
+        self.walls += [top, right, left, bottom]
 
     def try_add_player(self, player_id, player):
         if player_id in self.players:

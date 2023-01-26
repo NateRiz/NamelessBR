@@ -4,7 +4,7 @@ import psutil
 
 from Engine.Actor import Actor
 from Engine.Debug import debug
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 
 
 class Debugger(Actor):
@@ -14,7 +14,7 @@ class Debugger(Actor):
 
     def __init__(self):
         super().__init__()
-        self.set_draw_layer(Layer.DEBUG)
+        self.set_draw_layer(DrawLayer.DEBUG)
         self.font = pygame.font.Font(pygame.font.get_default_font(), 16)
         self.server_kb = 0
         self.metrics = {"Debugger": ""}

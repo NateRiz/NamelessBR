@@ -2,7 +2,7 @@ import pygame
 
 from Engine.Actor import Actor
 from Engine.Debug import debug
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 from MessageMapper import MessageMapper
 from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
 
@@ -15,7 +15,7 @@ class Door(Actor):
 
     def __init__(self, surface, direction, connected_room_coordinates):
         super().__init__()
-        self.set_draw_layer(Layer.STRUCTURE)
+        self.set_draw_layer(DrawLayer.STRUCTURE)
         self.surface = surface
         self.direction = direction
         self.connecting_room_coordinates = connected_room_coordinates

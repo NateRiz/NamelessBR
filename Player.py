@@ -5,7 +5,7 @@ from collections import deque
 
 from Engine.Actor import Actor
 from Engine.Camera import Camera
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
 from MessageMapper import MessageMapper
 from Serializable.Movement import Movement
@@ -17,9 +17,9 @@ class Player(Actor):
         self.my_id: int = my_id  # ID of the current player
         self.is_me: bool = is_me  # Whether this is the actual player or someone else
         if self.is_me:
-            self.set_draw_layer(Layer.PLAYER)
+            self.set_draw_layer(DrawLayer.PLAYER)
         else:
-            self.set_draw_layer(Layer.ENEMY_PLAYER)
+            self.set_draw_layer(DrawLayer.ENEMY_PLAYER)
         self.camera = Camera()
         self.pos: list = [800, 500]  # Absolute position in room
         self.triangle_size: int = 10
@@ -175,19 +175,19 @@ class Player(Actor):
             self.direction = self.direction_lookup[input_direction]
 
     def move_and_collide(self):
-        """
-        walls = self.get_world().room.walls
+        walls = self.get_current_room().walls
+        wall_collisions= [wall.rect for wall in walls]
 
         pos = list(self.pos)
         pos[0] += self.velocity[0]
-        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(walls) != -1:
+        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(wall_collisions) != -1:
             self.velocity[0] = 0
 
         pos = list(self.pos)
         pos[1] += self.velocity[1]
-        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(walls) != -1:
+        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(wall_collisions) != -1:
             self.velocity[1] = 0
-        """
+
         self.pos[0] += self.velocity[0]
         self.pos[1] += self.velocity[1]
 

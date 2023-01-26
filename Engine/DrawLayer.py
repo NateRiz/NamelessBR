@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 
-class Layer(IntEnum):
+class DrawLayer(IntEnum):
     """
     Layers for sorted z-index drawing. Drawn in increasing order
     """

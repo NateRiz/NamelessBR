@@ -4,7 +4,7 @@ import pygame
 
 from Engine.Debug import debug
 from Engine.Game import Game
-from Engine.Layer import Layer
+from Engine.DrawLayer import DrawLayer
 from Engine.Screen import Screen
 from Networking.Serializable import Serializable
 
@@ -60,12 +60,12 @@ class Actor:
     actors = weakref.WeakSet()
     # All drawable objects
     # Indices represent the layer in which we draw to the screen.
-    drawable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(Layer))]
+    drawable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(DrawLayer))]
 
     def __init__(self):
-        self._draw_layer = Layer.NONE
+        self._draw_layer = DrawLayer.NONE
         Actor.actors.add(self)
-        Actor.drawable[Layer.NONE].add(self)
+        Actor.drawable[DrawLayer.NONE].add(self)
 
     def get_world(self):
         """
