@@ -136,7 +136,7 @@ class Player(Actor):
             return
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_j:
+            if event.key == pygame.K_LSHIFT:
                 self.try_dash()
             if event.key == pygame.K_F12:
                 self.get_world().toggle_debug()

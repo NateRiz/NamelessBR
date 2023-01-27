@@ -1,5 +1,7 @@
 import pygame
 
+from Enemy.AI.Passive import Passive
+from Enemy.Body.Snail import Snail
 from Engine.Actor import Actor
 from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
@@ -24,6 +26,8 @@ class Room(Actor):
         self.doors = {}
         self.players = {}
         self.walls = []
+        self.snail = Passive(Snail())
+
 
     def draw(self, screen):
         """
