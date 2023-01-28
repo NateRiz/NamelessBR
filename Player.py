@@ -1,14 +1,16 @@
-from math import sqrt, copysign
+from math import sqrt, copysign, atan2, degrees
 import pygame
 from time import time
 from collections import deque
 
+from PlayerBodyBuilder import PlayerBodyBuilder
 from Engine.Actor import Actor
 from Engine.Camera import Camera
 from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
 from MessageMapper import MessageMapper
 from Serializable.Movement import Movement
+from Utility import rot_center
 
 
 class Player(Actor):
@@ -22,42 +24,16 @@ class Player(Actor):
             self.set_draw_layer(DrawLayer.ENEMY_PLAYER)
         self.camera = Camera()
         self.pos: list = [800, 500]  # Absolute position in room
-        self.triangle_size: int = 10
         self.collision_size: list = [6, 6]  # Marked by small square inside the player
         self.input: list = [0, 0]  # WASD input. vector from -1,-1 to 1,1. 0,0 is standing still.
         self.velocity: list = [0, 0]
         self.max_speed: int = 10
         self.acceleration_rate: float = 1.8
         self.friction: float = 0.2
-        self.direction_lookup = {
-            (0, -1): ((0, -self.triangle_size), (-self.triangle_size, self.triangle_size // 2),
-                      (self.triangle_size, self.triangle_size // 2)),  # N
-            (1, -1): ((3 * self.triangle_size / 4, -3 * self.triangle_size / 4),
-                      (-self.triangle_size, -3 * self.triangle_size / 4),
-                      (3 * self.triangle_size / 4, self.triangle_size)),  # NE,
-            (1, 0): ((self.triangle_size, 0), (-self.triangle_size // 2, -self.triangle_size),
-                     (-self.triangle_size // 2, self.triangle_size)),  # E
-            (1, 1): (
-                (3 * self.triangle_size / 4, 3 * self.triangle_size / 4),
-                (-self.triangle_size, 3 * self.triangle_size / 4),
-                (3 * self.triangle_size / 4, -self.triangle_size)),  # SE
-            (0, 1): ((0, self.triangle_size), (-self.triangle_size, -self.triangle_size // 2),
-                     (self.triangle_size, -self.triangle_size // 2)),  # S,
-            (-1, 1): (
-                (-3 * self.triangle_size / 4, 3 * self.triangle_size / 4),
-                (self.triangle_size, 3 * self.triangle_size / 4),
-                (-3 * self.triangle_size / 4, -self.triangle_size)),  # SW,
-            (-1, 0): ((-self.triangle_size, 0), (self.triangle_size // 2, -self.triangle_size),
-                      (self.triangle_size // 2, self.triangle_size)),  # W,
-            (-1, -1): ((-3 * self.triangle_size / 4, -3 * self.triangle_size / 4),
-                       (self.triangle_size, -3 * self.triangle_size / 4),
-                       (-3 * self.triangle_size / 4, self.triangle_size)),  # NW,
-        }
-        self.direction: tuple = self.direction_lookup[(0, -1)]
+        self.angle = 0
 
-        self.move_trail = deque([], maxlen=15)
-        self.move_trail_particle_cooldown: float = .02
-        self.move_trail_last_record_time = time()
+        # Replace this with a surface that always looks where the mouse is pointing.
+        self.surface = PlayerBodyBuilder().add_triangle_base().build()
 
         self.dash_cooldown: int = 2
         self.dash_impulse_force: int = 25
@@ -69,13 +45,14 @@ class Player(Actor):
         ##############
         # Track the diff between messages sent to the server to reduce traffic
         # Dummy numbers to ensure its updated first frame
-        self.last_message_sent = Movement(self.my_id, [-1, -1], [-9, -9])
+        self.last_message_sent = Movement(self.my_id, [-1, -1], [-9, -9], -1)
         # Time since the last position was sent. Don't send it every frame. Reduce traffic
         self.time_last_position_sent: float = time()
 
     @property
     def rect(self):
-        return pygame.rect.Rect(self.pos[0] - self.collision_size[0] // 2, self.pos[1] - self.collision_size[1] // 2,
+        return pygame.rect.Rect(self.pos[0] - self.collision_size[0] // 2 + self.surface.get_width()//2,
+                                self.pos[1] - self.collision_size[1] // 2 + self.surface.get_height()//2,
                                 *self.collision_size)
 
     @property
@@ -83,46 +60,29 @@ class Player(Actor):
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2
         abs_x, abs_y = self.pos
-        return center_x - abs_x, center_y - abs_y
+        return center_x - abs_x - self.surface.get_width()//2, center_y - abs_y-self.surface.get_height()//2
 
     def get_current_room(self):
         return self.get_world().room
 
     def draw(self, screen):
-        self.draw_particles(screen)
         self.draw_player(screen)
 
     def draw_player(self, screen):
         # My player should always be drawn in the center of the screen. The room is drawn to offset me.
+        center_x = self.get_screen().get_size()[0] // 2
+        center_y = self.get_screen().get_size()[1] // 2
+
         if self.is_me:
-            center_x = self.get_screen().get_size()[0] // 2
-            center_y = self.get_screen().get_size()[1] // 2
-            pygame.draw.polygon(screen, (100, 255, 100), [(center_x + d[0], center_y + d[1]) for d in self.direction])
+            mouse_x = pygame.mouse.get_pos()[0]
+            mouse_y = pygame.mouse.get_pos()[1]
+            self.angle = degrees(atan2(mouse_x - center_x, mouse_y - center_y)) + 180
+            rotated_surface, rect = rot_center(self.surface, self.angle, center_x, center_y)
+            screen.blit(rotated_surface, (rect.x, rect.y))
         else:
             # Draw other players directly into the room to later be offset
-            pygame.draw.polygon(self.get_current_room().get_surface(), (100, 255, 100),
-                                [(self.pos[0] + d[0], self.pos[1] + d[1]) for d in
-                                 self.direction])
-
-    def draw_particles(self, screen):
-        for i, (pos, input_dir) in enumerate(self.move_trail):
-            if input_dir[0] or input_dir[1]:
-                direction = self.direction_lookup[input_dir]
-                offset = self.offset_position
-                if self.is_me:
-                    coords = [(pos[0] + d[0] + offset[0], pos[1] + d[1] + offset[1]) for d in direction]
-                    surface_to_blit = screen
-                else:
-                    coords = [(pos[0] + d[0], pos[1] + d[1]) for d in direction]
-                    surface_to_blit = self.get_current_room().get_surface()
-                lx, ly = zip(*coords)
-                min_x, min_y, max_x, max_y = min(lx), min(ly), max(lx), max(ly)
-                target_rect = pygame.Rect(min_x, min_y, max_x - min_x, max_y - min_y)
-                shape_surf = pygame.Surface(target_rect.size, pygame.SRCALPHA)
-                pygame.draw.polygon(shape_surf, (100, 255, 100, 200 / (len(self.move_trail) - i)),
-                                    [(x - min_x, y - min_y) for x, y in coords])
-                surface_to_blit.blit(shape_surf, target_rect)
-                # pygame.draw.polygon(screen, (100, 255, 100), coords)
+            rotated_surface, rect = rot_center(self.surface, self.angle, *self.rect.center)
+            self.get_current_room().get_surface().blit(rotated_surface, rect)
 
     def get_pressed_input(self, pressed):
         if not self.is_me:
@@ -141,10 +101,8 @@ class Player(Actor):
             if event.key == pygame.K_F12:
                 self.get_world().toggle_debug()
 
-
     def update(self):
         self.move()
-        self.try_add_trail()
         self.send_updates_to_server()
 
     def move(self):
@@ -170,26 +128,21 @@ class Player(Actor):
 
         self.move_and_collide()
 
-        input_direction = tuple(self.input)
-        if input_direction[0] or input_direction[1]:
-            self.direction = self.direction_lookup[input_direction]
-
     def move_and_collide(self):
         walls = self.get_current_room().walls
-        wall_collisions= [wall.rect for wall in walls]
+        wall_collisions = [wall.rect for wall in walls]
 
-        pos = list(self.pos)
-        pos[0] += self.velocity[0]
-        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(wall_collisions) != -1:
-            self.velocity[0] = 0
-
-        pos = list(self.pos)
-        pos[1] += self.velocity[1]
-        if pygame.rect.Rect(*pos, *self.collision_size).collidelist(wall_collisions) != -1:
-            self.velocity[1] = 0
-
+        original_pos = list(self.pos)
         self.pos[0] += self.velocity[0]
+        if self.rect.collidelist(wall_collisions) != -1:
+            self.velocity[0] = 0
+            self.pos = original_pos
+
+        original_pos = list(self.pos)
         self.pos[1] += self.velocity[1]
+        if self.rect.collidelist(wall_collisions) != -1:
+            self.velocity[1] = 0
+            self.pos = original_pos
 
     def send_updates_to_server(self):
         if not self.is_me:
@@ -209,15 +162,15 @@ class Player(Actor):
             self.time_last_position_sent = time()
             message.pos = [int(self.pos[0]), int(self.pos[1])]
             self.last_message_sent.pos = list(message.pos)
+            message.angle = self.angle
+            self.last_message_sent.angle = int(self.angle)
             should_send_message = True
 
+
+
+        message.angle = self.angle
         if should_send_message:
             self.send_to_server({MessageMapper.MOVEMENT: message})
-
-    def try_add_trail(self):
-        if time() >= self.move_trail_last_record_time + self.move_trail_particle_cooldown:
-            self.move_trail_last_record_time = time()
-            self.move_trail.append((tuple(self.pos), tuple(self.input)))
 
     def try_dash(self):
         if time() >= self.dash_last_time + self.dash_cooldown:
@@ -241,25 +194,27 @@ class Player(Actor):
         if dest_y - src_y == 1:  # move down
             self.pos = list(current_room.doors[Door.NORTH].rect.center)
             self.pos[1] += buffer
-            self.direction = self.direction_lookup[(0, -1)]
+            # self.direction = self.direction_lookup[(0, -1)]
         elif dest_y - src_y == -1:  # move up
             self.pos = list(current_room.doors[Door.SOUTH].rect.center)
             self.pos[1] -= buffer
-            self.direction = self.direction_lookup[(0, 1)]
+            # self.direction = self.direction_lookup[(0, 1)]
         elif dest_x - src_x == 1:  # move right
             self.pos = list(current_room.doors[Door.WEST].rect.center)
             self.pos[0] += buffer
-            self.direction = self.direction_lookup[(1, 0)]
+            # self.direction = self.direction_lookup[(1, 0)]
         elif dest_x - src_x == -1:  # move left
             self.pos = list(current_room.doors[Door.EAST].rect.center)
             self.pos[0] -= buffer
-            self.direction = self.direction_lookup[(-1, 0)]
+            # self.direction = self.direction_lookup[(-1, 0)]
 
     ############################
     # Below is called by server
     ############################
-    def server_move_to(self, pos, input_direction):
+    def server_move_to(self, pos, input_direction, angle):
         if pos:
             self.pos = pos
         if input_direction:
             self.input = input_direction
+        if angle:
+            self.angle = angle

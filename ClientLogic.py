@@ -48,7 +48,7 @@ class ClientLogic(Actor):
         if response.my_id not in self.get_world().room.players:
             print(f"Player {response.my_id} not in my room yet. Tried to move")
             return
-        self.get_world().room.players[response.my_id].server_move_to(response.pos, response.direction)
+        self.get_world().room.players[response.my_id].server_move_to(response.pos, response.direction, response.angle)
 
     def _change_rooms_response(self, _message_type: int, message: dict, owner: int):
         response = ChangeRoomsResponse().load(message)

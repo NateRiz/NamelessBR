@@ -87,6 +87,10 @@ class Lobby:
             if not self._is_connected():
                 self.ip_input.poll_input(event)
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and self.start_button.is_enabled:
+                    self._start_game()
+
     def connect_to_host(self):
         """
         Connects the client to the specified host
