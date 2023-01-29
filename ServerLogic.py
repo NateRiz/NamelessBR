@@ -6,6 +6,7 @@ from MessageMapper import MessageMapper
 from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
+from Serializable.LeaveRoomResponse import LeaveRoomResponse
 from Serializable.Movement import Movement
 import Serializable
 from ServerOwned.Map import Map
@@ -76,6 +77,13 @@ class ServerLogic(Actor):
         if not ServerValidator.validate_change_rooms(self.map.players[owner].map_coordinates, request.destination):
             return
 
+        # Get players in last room
+        last_room_player_ids = self.map.get_players_in_room(owner)
+        # Let them know this player has left
+        for player in last_room_player_ids:
+            self.get_world().network.server.send({MessageMapper.LEAVE_ROOM_RESPONSE: LeaveRoomResponse(owner)}, player)
+
+        # Change the players room
         self.map.change_player_room(owner, request.destination)
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]

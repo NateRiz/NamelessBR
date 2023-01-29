@@ -88,3 +88,8 @@ class Room(Actor):
         is_me = self.get_world().my_id == player_id
         self.players[player_id] = Player(player_id, is_me)
         self.players[player_id].pos = player.position
+
+    def try_remove_player(self, player_id):
+        if player_id not in self.players:
+            return
+        del self.players[player_id]
