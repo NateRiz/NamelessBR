@@ -8,6 +8,7 @@ from Map.Door import Door
 from Map.Ground import Ground
 from Map.Wall import Wall
 from Player import Player
+from Projectile.Projectile import Projectile
 
 
 class Room(Actor):
@@ -27,6 +28,7 @@ class Room(Actor):
         self.players = {}
         self.walls = []
         self.snail = Passive(Snail())
+        self.projectiles: set[Projectile] = set()
 
 
     def draw(self, screen):
@@ -93,3 +95,10 @@ class Room(Actor):
         if player_id not in self.players:
             return
         del self.players[player_id]
+
+    def spawn_projectile(self, projectile: Projectile):
+        self.projectiles.add(projectile)
+
+    def remove_projectile(self, projectile: Projectile):
+        if projectile in self.projectiles:
+            self.projectiles.remove(projectile)

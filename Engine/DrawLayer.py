@@ -10,7 +10,8 @@ class DrawLayer(IntEnum):
     STRUCTURE = 2
     ENEMY = 3
     ENEMY_PLAYER = 4
+    PROJECTILE = 5
     # Objects draw themselves to a room and the room draws the objects at the end of the frame.
-    ROOM = 5
-    PLAYER = 6
-    DEBUG = 7
+    ROOM = 6
+    PLAYER = 7
+    DEBUG = 8

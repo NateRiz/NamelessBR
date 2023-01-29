@@ -60,6 +60,5 @@ class ClientLogic(Actor):
         response = LeaveRoomResponse().load(message)
         self.get_world().room.try_remove_player(response.player_id)
 
-
     def _unknown(self, message_type: int, message: dict):
         print(F"WARNING: Received message from [Server] with unknown message type: {message_type} {message}")

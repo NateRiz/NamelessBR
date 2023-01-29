@@ -1,7 +1,6 @@
 from math import sqrt, copysign, atan2, degrees
 import pygame
 from time import time
-from collections import deque
 
 from PlayerBodyBuilder import PlayerBodyBuilder
 from Engine.Actor import Actor
@@ -9,8 +8,9 @@ from Engine.Camera import Camera
 from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
 from MessageMapper import MessageMapper
+from Projectile.Simple import Simple
 from Serializable.Movement import Movement
-from Utility import rot_center
+from Utility import rot_center, normalize
 
 
 class Player(Actor):
@@ -40,6 +40,10 @@ class Player(Actor):
         self.dash_last_time = time()
         self.is_dashing: bool = False
 
+        self.shoot_cooldown = 1
+        self.last_shoot_time = time()
+        self.is_shot_queued = False  # Signifies that next update should spawn a shot (Don't add logic to poll())
+
         ##############
         # Networking
         ##############
@@ -51,8 +55,8 @@ class Player(Actor):
 
     @property
     def rect(self):
-        return pygame.rect.Rect(self.pos[0] - self.collision_size[0] // 2 + self.surface.get_width()//2,
-                                self.pos[1] - self.collision_size[1] // 2 + self.surface.get_height()//2,
+        return pygame.rect.Rect(self.pos[0] - self.collision_size[0] // 2 + self.surface.get_width() // 2,
+                                self.pos[1] - self.collision_size[1] // 2 + self.surface.get_height() // 2,
                                 *self.collision_size)
 
     @property
@@ -60,7 +64,7 @@ class Player(Actor):
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2
         abs_x, abs_y = self.pos
-        return center_x - abs_x - self.surface.get_width()//2, center_y - abs_y-self.surface.get_height()//2
+        return center_x - abs_x - self.surface.get_width() // 2, center_y - abs_y - self.surface.get_height() // 2
 
     def get_current_room(self):
         return self.get_world().room
@@ -91,6 +95,9 @@ class Player(Actor):
         self.input[0] = pressed[pygame.K_d] - pressed[pygame.K_a]
         self.input[1] = pressed[pygame.K_s] - pressed[pygame.K_w]
 
+        if pygame.mouse.get_pressed()[0]:
+            self.try_shoot()
+
     def poll_input(self, event):
         if not self.is_me:
             return
@@ -103,13 +110,11 @@ class Player(Actor):
 
     def update(self):
         self.move()
+        self.shoot()
         self.send_updates_to_server()
 
     def move(self):
-        normalized_input = [0, 0]
-        input_magnitude = sqrt(self.input[0] ** 2 + self.input[1] ** 2)
-        if input_magnitude != 0:
-            normalized_input = [self.input[0] / input_magnitude, self.input[1] / input_magnitude]
+        normalized_input = normalize(tuple(self.input))
         self.velocity[0] = self.velocity[0] + (
                 normalized_input[0] * self.acceleration_rate - (self.friction * self.velocity[0]))
         self.velocity[1] = self.velocity[1] + (
@@ -166,9 +171,6 @@ class Player(Actor):
             self.last_message_sent.angle = int(self.angle)
             should_send_message = True
 
-
-
-        message.angle = self.angle
         if should_send_message:
             self.send_to_server({MessageMapper.MOVEMENT: message})
 
@@ -207,6 +209,22 @@ class Player(Actor):
             self.pos = list(current_room.doors[Door.EAST].rect.center)
             self.pos[0] -= buffer
             # self.direction = self.direction_lookup[(-1, 0)]
+
+    def try_shoot(self):
+        if time() - self.last_shoot_time > self.shoot_cooldown:
+            self.is_shot_queued = True
+            self.last_shoot_time = time()
+
+    def shoot(self):
+        if not self.is_shot_queued:
+            return
+        self.is_shot_queued = False
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        center_x = self.get_screen().get_size()[0] // 2
+        center_y = self.get_screen().get_size()[1] // 2
+        direction = (mouse_x - center_x, mouse_y - center_y)
+        bullet = Simple(list(self.rect.center), normalize(direction))
+        self.get_current_room().spawn_projectile(bullet)
 
     ############################
     # Below is called by server

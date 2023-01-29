@@ -33,8 +33,20 @@ class Debugger(Actor):
 
     @debug
     def draw(self, screen):
+        self._draw_grid(screen)
         self._draw_panel(screen)
         self._draw_collision(screen)
+
+    def _draw_grid(self, screen):
+        w, h = screen.get_size()
+        line_size = 80
+        buffer = 20
+        total = line_size+buffer
+        for i in range((h // total)+1):
+            pygame.draw.line(screen, (255, 255, 255), (w // 2, i * total), (w // 2, i * total + line_size), 1)
+
+        for i in range((w // total)+1):
+            pygame.draw.line(screen, (255, 255, 255), (i * total, h // 2), (i * total + line_size, h // 2), 1)
 
     def _draw_collision(self, screen):
         player = self.get_world().get_my_player()

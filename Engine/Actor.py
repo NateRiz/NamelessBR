@@ -36,7 +36,8 @@ class ActorManager:
         """
         sends one poll event to all actors
         """
-        for actor in Actor.actors:
+        actors_to_update = list(Actor.actors)
+        for actor in actors_to_update:
             actor.poll_input(event)
 
     @staticmethod
@@ -45,8 +46,10 @@ class ActorManager:
         sends all pressed keys to all actors
         :param pressed: state of all keys
         """
-        for actor in Actor.actors:
+        actors_to_update = list(Actor.actors)
+        for actor in actors_to_update:
             actor.get_pressed_input(pressed)
+
 
 class Actor:
     """

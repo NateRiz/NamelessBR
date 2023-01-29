@@ -1,3 +1,5 @@
+from math import sqrt
+
 import pygame
 
 
@@ -14,3 +16,10 @@ def rot_center(image, angle, x, y):
     new_rect = rotated_image.get_rect(center=image.get_rect(center=(x, y)).center)
 
     return rotated_image, new_rect
+
+
+def normalize(vec2: tuple[float, float]) -> tuple[float, float]:
+    input_magnitude = sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+    if input_magnitude == 0:
+        return vec2
+    return vec2[0] / input_magnitude, vec2[1] / input_magnitude
