@@ -10,7 +10,7 @@ class Simple(Projectile):
         self.set_draw_layer(DrawLayer.PROJECTILE)
         self.position = position
         self.direction = direction
-        self.speed = 4
+        self.speed = 6
         self.size = 5
 
     @property

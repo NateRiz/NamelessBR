@@ -1,3 +1,5 @@
+from time import time
+
 import pygame
 import os
 import psutil
@@ -18,18 +20,25 @@ class Debugger(Actor):
         self.font = pygame.font.Font(pygame.font.get_default_font(), 16)
         self.server_kb = 0
         self.metrics = {"Debugger": ""}
+        self.fps_incrementer = 0
+        self.last_fps = 0
+        self.time_since_last_fps_reset = time()
 
     @debug
     def update(self):
         """
         Updates metrics every frame
         """
+        self._update_fps_counter()
+
+        self.metrics["FPS"] = F"{self.last_fps}"
         self.metrics["Player Id"] = self.get_world().my_id
         self.metrics["Server Incoming"] = F"{self._get_server_metrics()} KB/s"
         self.metrics["Client Incoming"] = F"{self._get_client_metrics()} KB/s"
         self.metrics["Memory"] = F"{self._get_memory_usage()} MB"
         self.metrics["Actors"] = F"{len(Actor.actors)}"
         self.metrics["Room"] = F"{self.get_world().room.coordinates} (Y,X)"
+        self.metrics["Position"] = F"{int(self.get_world().get_my_player().pos[0])}, {int(self.get_world().get_my_player().pos[1])}"
 
     @debug
     def draw(self, screen):
@@ -41,11 +50,11 @@ class Debugger(Actor):
         w, h = screen.get_size()
         line_size = 80
         buffer = 20
-        total = line_size+buffer
-        for i in range((h // total)+1):
+        total = line_size + buffer
+        for i in range((h // total) + 1):
             pygame.draw.line(screen, (255, 255, 255), (w // 2, i * total), (w // 2, i * total + line_size), 1)
 
-        for i in range((w // total)+1):
+        for i in range((w // total) + 1):
             pygame.draw.line(screen, (255, 255, 255), (i * total, h // 2), (i * total + line_size, h // 2), 1)
 
     def _draw_collision(self, screen):
@@ -87,3 +96,10 @@ class Debugger(Actor):
     def _get_memory_usage(self):
         process = psutil.Process(os.getpid())
         return process.memory_info().rss // (1024 * 1024)
+
+    def _update_fps_counter(self):
+        if time() - self.time_since_last_fps_reset > 1:
+            self.time_since_last_fps_reset = time()
+            self.last_fps = self.fps_incrementer
+            self.fps_incrementer = 0
+        self.fps_incrementer += 1

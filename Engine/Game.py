@@ -12,7 +12,7 @@ class Game(metaclass=Singleton):
     def __init__(self, network=None):
         super().__init__()
         self.clock = pygame.time.Clock()
-        self.fps = 60
+        self.MAX_FPS = 60
         self.screen = Screen()
         self.world = None
         self.network = network
@@ -31,7 +31,7 @@ class Game(metaclass=Singleton):
             self._draw()
 
     def _update(self):
-        self.clock.tick(self.fps)
+        self.clock.tick(self.MAX_FPS)
         self.world.update()
 
     def _poll_input(self):
