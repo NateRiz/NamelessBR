@@ -9,6 +9,8 @@ from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.LeaveRoomResponse import LeaveRoomResponse
 from Serializable.Movement import Movement
 import Serializable
+from Serializable.ShootProjectileRequest import ShootProjectileRequest
+from Serializable.ShootProjectileResponse import ShootProjectileResponse
 from ServerOwned.Map import Map
 from ServerOwned.ServerValidator import ServerValidator
 
@@ -26,6 +28,7 @@ class ServerLogic(Actor):
             MessageMapper.MOVEMENT: self._movement,
             MessageMapper.INITIAL_SYNC_REQUEST: self._initial_sync_request,
             MessageMapper.CHANGE_ROOMS_REQUEST: self._change_rooms_request,
+            MessageMapper.SHOOT_PROJECTILE_REQUEST: self._shoot_projectile,
         })
         self.map = Map()
 
@@ -92,6 +95,14 @@ class ServerLogic(Actor):
         for player in all_player_ids:
             self.get_world().network.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
                 master_room.coordinates, players)}, player)
+
+    def _shoot_projectile(self, _message_type, message, owner):
+        # TODO player entering room with bullets already shot
+        request = ShootProjectileRequest().load(message)
+        other_players_in_room = self.map.get_players_in_room(owner)
+        for player in other_players_in_room:
+            self.get_world().network.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
+
 
     def _unknown(self, message_type, message, owner):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")

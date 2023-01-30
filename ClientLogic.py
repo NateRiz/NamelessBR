@@ -4,10 +4,12 @@ from typing import Callable, DefaultDict
 from Engine.Actor import Actor
 from MessageMapper import MessageMapper
 from Networking.Message import Message
+from Projectile.Simple import Simple
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.LeaveRoomResponse import LeaveRoomResponse
 from Serializable.Movement import Movement
+from Serializable.ShootProjectileResponse import ShootProjectileResponse
 
 
 class ClientLogic(Actor):
@@ -23,6 +25,7 @@ class ClientLogic(Actor):
             MessageMapper.MOVEMENT: self._movement,
             MessageMapper.CHANGE_ROOMS_RESPONSE: self._change_rooms_response,
             MessageMapper.LEAVE_ROOM_RESPONSE: self._leave_room_response,
+            MessageMapper.SHOOT_PROJECTILE_RESPONSE: self._shoot_projectile_response,
         })
 
     def update(self):
@@ -59,6 +62,11 @@ class ClientLogic(Actor):
     def _leave_room_response(self, _message_type: int, message: dict):
         response = LeaveRoomResponse().load(message)
         self.get_world().room.try_remove_player(response.player_id)
+
+    def _shoot_projectile_response(self, _message_type: int, message:dict):
+        response = ShootProjectileResponse().load(message)
+        projectile = Simple(response.position, response.direction)
+        self.get_world().room.spawn_projectile(projectile)
 
     def _unknown(self, message_type: int, message: dict):
         print(F"WARNING: Received message from [Server] with unknown message type: {message_type} {message}")

@@ -10,6 +10,7 @@ from Map.Door import Door
 from MessageMapper import MessageMapper
 from Projectile.Simple import Simple
 from Serializable.Movement import Movement
+from Serializable.ShootProjectileRequest import ShootProjectileRequest
 from Utility import rot_center, normalize
 
 
@@ -40,7 +41,7 @@ class Player(Actor):
         self.dash_last_time = time()
         self.is_dashing: bool = False
 
-        self.shoot_cooldown = 1
+        self.shoot_cooldown = 0.8
         self.last_shoot_time = time()
         self.is_shot_queued = False  # Signifies that next update should spawn a shot (Don't add logic to poll())
 
@@ -111,7 +112,7 @@ class Player(Actor):
     def update(self):
         self.move()
         self.shoot()
-        self.send_updates_to_server()
+        self.send_movement_to_server()
 
     def move(self):
         normalized_input = normalize(tuple(self.input))
@@ -149,7 +150,7 @@ class Player(Actor):
             self.velocity[1] = 0
             self.pos = original_pos
 
-    def send_updates_to_server(self):
+    def send_movement_to_server(self):
         if not self.is_me:
             return
 
@@ -222,9 +223,11 @@ class Player(Actor):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2
-        direction = (mouse_x - center_x, mouse_y - center_y)
-        bullet = Simple(list(self.rect.center), normalize(direction))
+        direction = normalize((mouse_x - center_x, mouse_y - center_y))
+        position = list(self.rect.center)
+        bullet = Simple(position, direction)
         self.get_current_room().spawn_projectile(bullet)
+        self.send_to_server({MessageMapper.SHOOT_PROJECTILE_REQUEST: ShootProjectileRequest(position, direction)})
 
     ############################
     # Below is called by server
