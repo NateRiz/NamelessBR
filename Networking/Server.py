@@ -27,7 +27,6 @@ class Server:
         self.metric_last_record_time = time()
         self.metric_num_bytes = 0
         self.metric_last_kb = 0
-
         Thread(target=self._listen).start()
 
     def get_next_message(self) -> Message | None:

@@ -16,23 +16,28 @@ class World(metaclass=Singleton):
     Object that controls all actors
     """
 
-    def __init__(self, network):
-        self.network = network
+    def __init__(self, client=None, server=None):
+        self.client = client
+        self.server = server
         self.room = None
         self.is_debug = False
-        self.server_logic = ServerLogic()
-        self.client_logic = ClientLogic()
+        self.server_logic = None
+        self.client_logic = None
         self.map = None
-        self.debugger = Debugger()
+        self.debugger = None
         self.my_id = -1
 
     def on_start(self):
         """
         Immediately called once when the game starts
         """
-        if self.network.server:
+        if self.server:
+            self.server_logic = ServerLogic()
             self.server_logic.on_start()
-        self.network.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
+        else:
+            self.client_logic = ClientLogic()
+            self.debugger = Debugger()
+            self.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):
         """

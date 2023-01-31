@@ -1,8 +1,6 @@
 import weakref
 from typing import List, Dict
-import pygame
 
-from Engine.Debug import debug
 from Engine.Game import Game
 from Engine.DrawLayer import DrawLayer
 from Engine.Screen import Screen
@@ -89,7 +87,7 @@ class Actor:
         Send a message to the server
         :param message: Message to send to server
         """
-        Game().network.client.send(message)
+        Game().client.send(message)
 
     def set_draw_layer(self, layer):
         """

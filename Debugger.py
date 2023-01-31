@@ -85,13 +85,13 @@ class Debugger(Actor):
         screen.blit(panel, (screen.get_width() - panel_size[0], 0))
 
     def _get_server_metrics(self):
-        server = self.get_world().network.server
+        server = self.get_world().server
         if not server:
             return 0
         return server.get_incoming_kb_metric()
 
     def _get_client_metrics(self):
-        return self.get_world().network.client.get_incoming_kb_metric()
+        return self.get_world().client.get_incoming_kb_metric()
 
     def _get_memory_usage(self):
         process = psutil.Process(os.getpid())

@@ -15,7 +15,7 @@ class Map:
             return
         map_generator = MapGenerator(player_ids)
         map_generator.generate()
-        map_generator.debug_draw_map()
+        # map_generator.debug_draw_map()
         self.map = map_generator.map
         self.end_position = map_generator.end_room
         self.players = {id_: Player((800, 500), map_generator.players[id_]) for id_ in player_ids}

@@ -1,11 +1,12 @@
 import pygame
 
-from Networking.Network import Network
+from MainServer import MainServer
 from Menu.Menu import Menu
 from Engine.Game import Game
 from Menu.Lobby import Lobby
 from Menu.LobbyState import LobbyState
 from Menu.LobbyStateContainer import LobbyStateContainer
+from Networking.Client import Client
 from World import World
 
 
@@ -17,12 +18,14 @@ class GameState:
     def __init__(self):
         pygame.init()
         self.clock = pygame.time.Clock()
-        self.network = Network()
+        self.client = Client()
         self.lobby_state = LobbyStateContainer()
         self.lobby_state.set(LobbyState.TRANSITION_TO_MENU)
-        self.menu = Menu(self.network, self.lobby_state)
-        self.lobby = Lobby(self.network, self.lobby_state)
+        self.menu = Menu(self.client, self.lobby_state)
+        self.lobby = None
         self.game = None
+        self.server_process = MainServer()
+
 
     def start(self):
         """
@@ -37,8 +40,8 @@ class GameState:
                 case LobbyState.TRANSITION_TO_MENU:
                     self._menu_loop()
                 case LobbyState.TRANSITION_TO_GAME:
-                    self.game = Game(self.network)
-                    self.game.main_loop(World(self.network))
+                    self.game = Game(self.client)
+                    self.game.main_loop(World(self.client))
 
     def _menu_loop(self):
         self.lobby_state.set(LobbyState.MENU)
@@ -50,7 +53,9 @@ class GameState:
             pygame.display.flip()
 
     def _host_loop(self):
-        self.lobby.connect_to_host()
+        self.server_process.start_process()
+        self.lobby = Lobby(self.client, self.lobby_state, True)
+        self.lobby.connect_to_host("127.0.0.1", 7777)
         self.lobby_state.set(LobbyState.HOST)
         while self.lobby_state.lobby_state == LobbyState.HOST:
             self.clock.tick(60)
@@ -60,6 +65,7 @@ class GameState:
             pygame.display.flip()
 
     def _join_loop(self):
+        self.lobby = Lobby(self.client, self.lobby_state, False)
         self.lobby_state.set(LobbyState.JOIN)
         while self.lobby_state.lobby_state == LobbyState.JOIN:
             self.clock.tick(60)

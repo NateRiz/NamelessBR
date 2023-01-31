@@ -1,19 +1,22 @@
 import sys
+from threading import Thread
 
 import pygame
 from pygame import locals
 from Engine.Screen import Screen
 from GUI.Button import Button
+from MainServer import MainServer
 from Menu.Lobby import Lobby
 from Menu.LobbyState import LobbyState
+from Networking.Server import Server
 
 
 class Menu:
     """
     Startup menu for host and join
     """
-    def __init__(self, network, lobby_state):
-        self.network = network
+    def __init__(self, client, lobby_state):
+        self.client = client
         self.lobby_state = lobby_state
         self.screen = Screen().screen
         self.animating_wall_rect: pygame.rect.Rect | None = None
@@ -86,7 +89,6 @@ class Menu:
 
     def _on_click_host(self):
         self._hide_and_disable_buttons()
-        self.network.create_host()
         self._transition_to_online_lobby(self.host_button.rect)
         self.chosen_lobby = LobbyState.TRANSITION_TO_HOST
 

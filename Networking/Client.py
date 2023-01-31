@@ -21,6 +21,7 @@ class Client:
         self.metric_last_record_time = time()
         self.metric_num_bytes = 0
         self.metric_last_kb = 0
+        self._is_connected = False
 
     def connect(self, ip, port):
         """
@@ -29,6 +30,7 @@ class Client:
         :param port: Port of host
         """
         self.socket.connect((ip, port))
+        self._is_connected = True
         print("Client started..")
         Thread(target=self._poll).start()
 
@@ -52,6 +54,9 @@ class Client:
         if len(self.message_queue):
             return self.message_queue.popleft()
         return None
+
+    def is_connected(self):
+        return self._is_connected
 
     def get_incoming_kb_metric(self):
         """

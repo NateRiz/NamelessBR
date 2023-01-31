@@ -36,14 +36,14 @@ class ServerLogic(Actor):
         """
         Immediately called once when the game starts
         """
-        clients = list(self.get_world().network.server.clients.keys())
+        clients = list(self.get_world().server.clients.keys())
         self.map.generate(clients)
 
     def update(self):
         """
         Gets all queued messages from clients and dispatches them.
         """
-        server = self.get_world().network.server
+        server = self.get_world().server
         if server is None:
             return
 
@@ -63,7 +63,7 @@ class ServerLogic(Actor):
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
         serialized = {owner: Serializable.Player.Player(self.map.players[owner].position)}
-        self.get_world().network.server.send(
+        self.get_world().server.send(
             {MessageMapper.INITIAL_SYNC_RESPONSE: InitialSyncResponse(owner, len(self.map.map)),
              MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, serialized)},
             owner)
@@ -73,7 +73,7 @@ class ServerLogic(Actor):
         request = Movement().load(message)
         self.map.move_player_position(owner, request.pos)
         for player in other_players_in_room:
-            self.get_world().network.server.send({message_type: message}, player)
+            self.get_world().server.send({message_type: message}, player)
 
     def _change_rooms_request(self, _message_type, message, owner):
         request = ChangeRoomsRequest().load(message)
@@ -84,7 +84,7 @@ class ServerLogic(Actor):
         last_room_player_ids = self.map.get_players_in_room(owner)
         # Let them know this player has left
         for player in last_room_player_ids:
-            self.get_world().network.server.send({MessageMapper.LEAVE_ROOM_RESPONSE: LeaveRoomResponse(owner)}, player)
+            self.get_world().server.send({MessageMapper.LEAVE_ROOM_RESPONSE: LeaveRoomResponse(owner)}, player)
 
         # Change the players room
         self.map.change_player_room(owner, request.destination)
@@ -93,7 +93,7 @@ class ServerLogic(Actor):
         all_player_ids = self.map.get_players_in_room(owner) + [owner]
         players = {p: Serializable.Player.Player(self.map.players[p].position) for p in all_player_ids}
         for player in all_player_ids:
-            self.get_world().network.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
+            self.get_world().server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
                 master_room.coordinates, players)}, player)
 
     def _shoot_projectile(self, _message_type, message, owner):
@@ -101,7 +101,7 @@ class ServerLogic(Actor):
         request = ShootProjectileRequest().load(message)
         other_players_in_room = self.map.get_players_in_room(owner)
         for player in other_players_in_room:
-            self.get_world().network.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
+            self.get_world().server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
 
 
     def _unknown(self, message_type, message, owner):

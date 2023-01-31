@@ -2,13 +2,15 @@ import sys
 import pygame
 from pygame import locals
 
+from MainServer import MainServer
 from MessageMapper import MessageMapper
 from Engine.Screen import Screen
 from GUI.Button import Button
 from GUI.InputBox import InputBox
 from Menu.LobbyState import LobbyState
 from Menu.PlayerContainer import PlayerContainer
-from Networking.Network import Network
+
+from Networking.Client import Client
 from Serializable.Empty import Empty
 from Serializable.ListClientsResponse import ListClientsResponse
 
@@ -20,33 +22,30 @@ class Lobby:
     WIDTH = 1400
     HEIGHT = 1000
 
-    def __init__(self, network, lobby_state_container):
-        self.network: Network = network
+    def __init__(self, client, lobby_state_container, is_host):
+        self.client: Client = client
         self.lobby_state = lobby_state_container
-        self.ip_input = InputBox(pygame.rect.Rect(0, 0, 0, 0)).connect(self.connect_to_host)
+        self.is_host = is_host
+        self.ip_input = InputBox(pygame.rect.Rect(0, 0, 0, 0)).connect(self._connect_to_host)
         self.ip_input.value = "127.0.0.1"
         self.start_button = Button(pygame.rect.Rect(0, 0, 0, 0), self._start_game, "Start")
         self.start_button.set_disabled()
         self.start_button.set_hidden(True)
         self.lobby_rect = pygame.rect.Rect(0, 0, 0, 0)
         screen_availability = self._setup_screen()
-        self.player_container = PlayerContainer(self.network, screen_availability)
+        self.player_container = PlayerContainer(screen_availability)
 
     def update(self):
         """
         Wait and handle server messages for adding clients and starting the game
         """
-        if self._is_host():
-            message = self.network.server.get_next_message()
-            if message and MessageMapper.LIST_CLIENTS_REQUEST in message.message:
-                self.network.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: ListClientsResponse(
-                    list(self.network.server.clients.keys()))})
-            if len(self.network.server.clients) > 1:
+        if self.is_host:
+            if len(self.player_container.containers) > 1:
                 self.start_button.set_hidden(False)
                 self.start_button.set_enabled()
 
         if self._is_connected():
-            message = self.network.client.get_next_message()
+            message = self.client.get_next_message()
             if message:
                 if MessageMapper.START in message.message:
                     self.lobby_state.lobby_state = LobbyState.TRANSITION_TO_GAME
@@ -64,7 +63,7 @@ class Lobby:
 
         pygame.draw.rect(screen, (0, 245, 255), self.lobby_rect, 2, 8)
 
-        if self._is_host():
+        if self.is_host:
             self.start_button.draw(screen)
 
         if self._is_connected():
@@ -89,20 +88,21 @@ class Lobby:
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.start_button.is_enabled:
-                    self._start_game()
+                    if self.is_host:
+                        self._start_game()
 
-    def connect_to_host(self):
+    def _connect_to_host(self):
+        self.connect_to_host(self.ip_input.value, 7777)
+
+    def connect_to_host(self, ip: str, port: int):
         """
         Connects the client to the specified host
         """
-        self.network.create_client(self.ip_input.value, 7777)
-        self.network.client.send({MessageMapper.LIST_CLIENTS_REQUEST: Empty()})
+        self.client.connect(ip, port)
+        self.client.send({MessageMapper.LIST_CLIENTS_REQUEST: Empty()})
 
     def _is_connected(self):
-        return self.network.client is not None
-
-    def _is_host(self):
-        return self.network.server is not None
+        return self.client.is_connected()
 
     def _setup_screen(self):
         screen = Screen().screen
@@ -126,4 +126,4 @@ class Lobby:
         return ip_x, y, ip_w, start_y
 
     def _start_game(self):
-        self.network.server.send_all({MessageMapper.START: Empty()})
+        self.client.send({MessageMapper.START: Empty()})

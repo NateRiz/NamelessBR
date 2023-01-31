@@ -32,10 +32,10 @@ class ClientLogic(Actor):
         """
         Gets all queued messages from the server and dispatches them.
         """
-        message = self.get_world().network.client.get_next_message()
+        message = self.get_world().client.get_next_message()
         while message is not None:
             self._dispatch(message)
-            message = self.get_world().network.client.get_next_message()
+            message = self.get_world().client.get_next_message()
 
     def _dispatch(self, message: Message):
         for message_type, msg in message.message.items():

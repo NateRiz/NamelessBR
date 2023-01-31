@@ -1,11 +1,7 @@
 import pygame.rect
 
-from Networking.Network import Network
-
-
 class PlayerContainer:
-    def __init__(self, network, screen_availability):
-        self.network: Network = network
+    def __init__(self, screen_availability):
         self.containers = {}
         self.screen_availability = screen_availability
 
