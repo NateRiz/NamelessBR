@@ -1,6 +1,6 @@
 import pygame
 
-from MainServer import MainServer
+from MainServer import create_server
 from Menu.Menu import Menu
 from Engine.Game import Game
 from Menu.Lobby import Lobby
@@ -24,8 +24,6 @@ class GameState:
         self.menu = Menu(self.client, self.lobby_state)
         self.lobby = None
         self.game = None
-        self.server_process = MainServer()
-
 
     def start(self):
         """
@@ -53,7 +51,7 @@ class GameState:
             pygame.display.flip()
 
     def _host_loop(self):
-        self.server_process.start_process()
+        create_server(True)
         self.lobby = Lobby(self.client, self.lobby_state, True)
         self.lobby.connect_to_host("127.0.0.1", 7777)
         self.lobby_state.set(LobbyState.HOST)

@@ -2,7 +2,6 @@ import sys
 import pygame
 from pygame import locals
 
-from MainServer import MainServer
 from MessageMapper import MessageMapper
 from Engine.Screen import Screen
 from GUI.Button import Button

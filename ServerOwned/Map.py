@@ -1,5 +1,6 @@
 from Map.MapGenerator import MapGenerator
-from ServerOwned.Player import Player
+from Player import Player
+
 from ServerOwned.Room import Room
 
 
@@ -18,10 +19,12 @@ class Map:
         # map_generator.debug_draw_map()
         self.map = map_generator.map
         self.end_position = map_generator.end_room
-        self.players = {id_: Player((800, 500), map_generator.players[id_]) for id_ in player_ids}
-        for id_, p in self.players.items():
-            y, x = p.map_coordinates
-            self.map[y][x].players[id_] = p
+        for id_ in player_ids:
+            player = Player(id_, False)
+            player.map_coordinates = map_generator.players[id_]
+            self.players[id_] = player
+            y, x = player.map_coordinates
+            self.map[y][x].players[id_] = player
 
     def change_player_room(self, player_id, destination):
         src = self.players[player_id].map_coordinates

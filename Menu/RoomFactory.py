@@ -1,10 +1,10 @@
-import Map
+from Map.Room import Room
 
 
 class RoomFactory:
     @staticmethod
-    def create(coordinates: list) -> Map.Room.Room:
-        room = Map.Room.Room(coordinates)
+    def create(coordinates: list) -> Room:
+        room = Room(coordinates)
         room.add_doors()
         room.add_walls()
         return room

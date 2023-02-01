@@ -18,7 +18,6 @@ class Debugger(Actor):
         super().__init__()
         self.set_draw_layer(DrawLayer.DEBUG)
         self.font = pygame.font.Font(pygame.font.get_default_font(), 16)
-        self.server_kb = 0
         self.metrics = {"Debugger": ""}
         self.fps_incrementer = 0
         self.last_fps = 0
@@ -33,7 +32,6 @@ class Debugger(Actor):
 
         self.metrics["FPS"] = F"{self.last_fps}"
         self.metrics["Player Id"] = self.get_world().my_id
-        self.metrics["Server Incoming"] = F"{self._get_server_metrics()} KB/s"
         self.metrics["Client Incoming"] = F"{self._get_client_metrics()} KB/s"
         self.metrics["Memory"] = F"{self._get_memory_usage()} MB"
         self.metrics["Actors"] = F"{len(Actor.actors)}"
@@ -83,12 +81,6 @@ class Debugger(Actor):
             panel.blit(text, (8, 8 + i * 2 * self.font.get_height()))
 
         screen.blit(panel, (screen.get_width() - panel_size[0], 0))
-
-    def _get_server_metrics(self):
-        server = self.get_world().server
-        if not server:
-            return 0
-        return server.get_incoming_kb_metric()
 
     def _get_client_metrics(self):
         return self.get_world().client.get_incoming_kb_metric()

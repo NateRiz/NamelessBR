@@ -9,14 +9,13 @@ class Game(metaclass=Singleton):
     """
     Singleton class that controls top level engine objects and window settings
     """
-    def __init__(self, client=None, server=None):
+    def __init__(self, client):
         super().__init__()
         self.clock = pygame.time.Clock()
         self.MAX_FPS = 60
         self.screen = Screen()
         self.world = None
         self.client = client
-        self.server = server
 
     def main_loop(self, world):
         """
@@ -27,10 +26,9 @@ class Game(metaclass=Singleton):
         self.world.on_start()
 
         while 1:
-            if self.server is None:
+            if self.client:
                 self._poll_input()
-            self._update()
-            if self.server is None:
+                self._update()
                 self._draw()
 
     def _update(self):

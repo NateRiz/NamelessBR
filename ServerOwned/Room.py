@@ -1,4 +1,4 @@
-from ServerOwned.Player import Player
+from Serializable.Player import Player
 
 
 class Room:

@@ -2,13 +2,11 @@ from ClientLogic import ClientLogic
 from Debugger import Debugger
 from Engine import Actor
 from Engine.Singleton import Singleton
-from Map.Room import Room
 from Menu.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
-from ServerLogic import ServerLogic
 
 
 class World(metaclass=Singleton):
@@ -16,12 +14,10 @@ class World(metaclass=Singleton):
     Object that controls all actors
     """
 
-    def __init__(self, client=None, server=None):
+    def __init__(self, client):
         self.client = client
-        self.server = server
         self.room = None
         self.is_debug = False
-        self.server_logic = None
         self.client_logic = None
         self.map = None
         self.debugger = None
@@ -31,13 +27,9 @@ class World(metaclass=Singleton):
         """
         Immediately called once when the game starts
         """
-        if self.server:
-            self.server_logic = ServerLogic()
-            self.server_logic.on_start()
-        else:
-            self.client_logic = ClientLogic()
-            self.debugger = Debugger()
-            self.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
+        self.client_logic = ClientLogic()
+        self.debugger = Debugger()
+        self.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):
         """

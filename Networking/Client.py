@@ -2,7 +2,7 @@ import json
 import socket
 from collections import deque
 from threading import Thread
-from time import time
+from time import time, sleep
 from typing import Dict
 
 from Networking.AtomicDeque import AtomicDeque
@@ -29,8 +29,13 @@ class Client:
         :param ip: Ip of host
         :param port: Port of host
         """
-        self.socket.connect((ip, port))
-        self._is_connected = True
+        while not self._is_connected:
+            try:
+                self.socket.connect((ip, port))
+                self._is_connected = True
+            except socket.error as error:
+                print(F"Client connection failed: {error}\nRetrying...")
+                sleep(1)
         print("Client started..")
         Thread(target=self._poll).start()
 

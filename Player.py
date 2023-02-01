@@ -24,6 +24,7 @@ class Player(Actor):
         else:
             self.set_draw_layer(DrawLayer.ENEMY_PLAYER)
         self.camera = Camera()
+        self.map_coordinates = (-1, -1)
         self.pos: list = [800, 500]  # Absolute position in room
         self.collision_size: list = [6, 6]  # Marked by small square inside the player
         self.input: list = [0, 0]  # WASD input. vector from -1,-1 to 1,1. 0,0 is standing still.
