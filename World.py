@@ -2,7 +2,7 @@ from ClientLogic import ClientLogic
 from Debugger import Debugger
 from Engine import Actor
 from Engine.Singleton import Singleton
-from Menu.RoomFactory import RoomFactory
+from Map.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
@@ -53,7 +53,7 @@ class World(metaclass=Singleton):
         src = self.room.coordinates if self.room else None
 
         if src != change_rooms_response.room_coordinates:
-            self.room = RoomFactory.create(change_rooms_response.room_coordinates)
+            self.room = RoomFactory.create(change_rooms_response.room_coordinates, len(self.map))
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
         if self.get_my_player() is not None:
             self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)

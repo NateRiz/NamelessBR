@@ -65,7 +65,7 @@ class ClientLogic(Actor):
 
     def _shoot_projectile_response(self, _message_type: int, message:dict):
         response = ShootProjectileResponse().load(message)
-        projectile = Simple(response.position, response.direction)
+        projectile = Simple(response.position, response.direction, self.get_world().room)
         self.get_world().room.spawn_projectile(projectile)
 
     def _unknown(self, message_type: int, message: dict):

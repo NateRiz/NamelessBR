@@ -1,7 +1,8 @@
 from Map.MapGenerator import MapGenerator
+from Map.Room import Room
 from Player import Player
-
-from ServerOwned.Room import Room
+from Projectile.Simple import Simple
+from Serializable.ShootProjectileRequest import ShootProjectileRequest
 
 
 class Map:
@@ -9,6 +10,12 @@ class Map:
         self.map: list[list[Room]] = []
         self.end_position = []  # End room coordinate in map
         self.players: dict[int, Player] = {}  # Server owned player object
+
+    def update(self):
+        for p in self.players.values():
+            y, x = p.map_coordinates
+            self.map[y][x].update()
+
 
     def generate(self, player_ids):
         if self.map:
@@ -41,7 +48,7 @@ class Map:
         :param player_id: Player id to update
         :param position: position relative to the room
         """
-        self.players[player_id].position = position
+        self.players[player_id].pos = position
 
     def get_players_in_room(self, player_id) -> list[int]:
         """
@@ -54,3 +61,8 @@ class Map:
             lambda id_: id_ != player_id and tuple(self.players[id_].map_coordinates) == tuple(coordinate),
             self.players.keys())
         return list(players_in_room)
+
+    def add_projectile(self, player_id: int, shoot_projectile: ShootProjectileRequest):
+        y, x = self.players[player_id].map_coordinates
+        room = self.map[y][x]
+        room.spawn_projectile(Simple(shoot_projectile.position, shoot_projectile.direction, room))

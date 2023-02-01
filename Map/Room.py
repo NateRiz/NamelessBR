@@ -24,12 +24,11 @@ class Room(Actor):
         self.height = 1500
         self.surface = pygame.Surface((self.width, self.height))
         self.ground = Ground(self.surface)
-        self.doors = {}
-        self.players = {}
-        self.walls = []
+        self.doors: dict[int, Door] = {}
+        self.players: dict[int, Player] = {}
+        self.walls: list[Wall] = []
         self.snail = Passive(Snail())
         self.projectiles: set[Projectile] = set()
-
 
     def draw(self, screen):
         """
@@ -58,11 +57,10 @@ class Room(Actor):
         """
         return self.surface
 
-    def add_doors(self):
+    def add_doors(self, map_size):
         """
         Add doors so long as they lead to another room in the map.
         """
-        map_size = len(self.get_world().map)
         if self.coordinates[0] > 0:
             self.doors[Door.NORTH] = Door(self.surface, Door.NORTH, (self.coordinates[0] - 1, self.coordinates[1]))
 

@@ -50,6 +50,7 @@ class ServerLogic:
         while message is not None:
             self._dispatch(message)
             message = server.get_next_message()
+            self.map.update()
 
     def _dispatch(self, message):
         for message_type, msg in message.message.items():
@@ -90,7 +91,7 @@ class ServerLogic:
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
         all_player_ids = self.map.get_players_in_room(owner) + [owner]
-        players = {p: Serializable.Player.Player(self.map.players[p].position, self.map.players[p].map_coordinates) for p in all_player_ids}
+        players = {p: Serializable.Player.Player(self.map.players[p].pos, self.map.players[p].map_coordinates) for p in all_player_ids}
         for player in all_player_ids:
             self.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
                 master_room.coordinates, players)}, player)
@@ -98,10 +99,10 @@ class ServerLogic:
     def _shoot_projectile(self, _message_type, message, owner):
         # TODO player entering room with bullets already shot
         request = ShootProjectileRequest().load(message)
+        self.map.add_projectile(owner, request)
         other_players_in_room = self.map.get_players_in_room(owner)
         for player in other_players_in_room:
             self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
-
 
     def _unknown(self, message_type, message, owner):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")

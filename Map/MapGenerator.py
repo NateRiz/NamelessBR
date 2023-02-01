@@ -2,7 +2,10 @@ from math import floor
 import pygame
 from pygame.locals import QUIT
 from random import seed, randint, shuffle
-from ServerOwned.Room import Room
+
+from Map.Room import Room
+from Map.RoomFactory import RoomFactory
+
 
 class MapGenerator:
     def __init__(self, player_ids):
@@ -51,7 +54,7 @@ class MapGenerator:
         return self.map
 
     def _create_base_map(self):
-        self.map = [[Room((y, x), -1) for x in range(self.map_length)] for y in range(self.map_width)]
+        self.map = [[RoomFactory.create([y, x], self.map_width) for x in range(self.map_length)] for y in range(self.map_width)]
         self._place_players_and_end_room()
 
     def _place_players_and_end_room(self):
@@ -73,11 +76,13 @@ class MapGenerator:
                     if distance < min_spacing_distance:
                         are_entities_placed = False
                         break
+        """
         min_difficulty = min_spacing_distance
         for i, r in enumerate(self.map):
             for j, rm in enumerate(r):
                 distance_from_end = abs(i - self.end_room[0]) + abs(j - self.end_room[1])
                 rm.difficulty = min(min_difficulty, distance_from_end)
+        """
 
     def _get_random_coordinate_on_next_side(self):
         while 1:

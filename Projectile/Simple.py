@@ -5,11 +5,12 @@ from Projectile.Projectile import Projectile
 
 
 class Simple(Projectile):
-    def __init__(self, position, direction):
+    def __init__(self, position, direction, room):
         super().__init__()
         self.set_draw_layer(DrawLayer.PROJECTILE)
         self.position = position
         self.direction = direction
+        self.room = room
         self.speed = 6
         self.size = 5
 
@@ -28,7 +29,6 @@ class Simple(Projectile):
         self.check_collisions()
 
     def check_collisions(self):
-        walls = self.get_world().room.walls
-        wall_collisions = [wall.rect for wall in walls]
+        wall_collisions = [wall.rect for wall in self.room.walls]
         if self.rect.collidelist(wall_collisions) != -1:
             self.get_world().room.remove_projectile(self)
