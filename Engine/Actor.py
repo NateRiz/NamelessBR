@@ -1,6 +1,7 @@
 import weakref
 from typing import List, Dict
 
+from Engine.CollisionLayer import CollisionLayer
 from Engine.Game import Game
 from Engine.DrawLayer import DrawLayer
 from Engine.Screen import Screen
@@ -48,6 +49,12 @@ class ActorManager:
         for actor in actors_to_update:
             actor.get_pressed_input(pressed)
 
+    @staticmethod
+    def check_collisions_all():
+        """Checks for collisions for all objects that have a collision mask"""
+        for actor in Actor.actors:
+            actor.check_collisions()
+
 
 class Actor:
     """
@@ -62,9 +69,16 @@ class Actor:
     # All drawable objects
     # Indices represent the layer in which we draw to the screen.
     drawable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(DrawLayer))]
+    # All objects that can be collided with
+    # Indices represent the layer in which the object resides
+    collidable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(CollisionLayer))]
+
 
     def __init__(self):
         self._draw_layer = DrawLayer.NONE
+        # Collision mask is the collision layer that this object scans to collide with
+        self._collision_masks: set[int] = set()
+        self._collision_layer = CollisionLayer.NONE
         Actor.actors.add(self)
         Actor.drawable[DrawLayer.NONE].add(self)
 
@@ -100,32 +114,47 @@ class Actor:
         self._draw_layer = layer
         Actor.drawable[self._draw_layer].add(self)
 
+    def set_collision_layer(self, layer):
+        assert layer != CollisionLayer.NONE, "There is no reason to set collision layer to none"
+        assert self._collision_layer == CollisionLayer.NONE, "No support for changing collision layers, yet."
+        self._collision_layer = layer
+        self.collidable[layer].add(self)
+
+    def add_collision_mask(self, mask):
+        self._collision_masks.add(mask)
+
     def update(self):
-        """
-        Overridable update placeholder
-        """
+        """Overridable update placeholder"""
         pass
 
     def poll_input(self, event):
-        """
-        Overridable poll placeholder
-        """
+        """Overridable poll placeholder"""
         pass
 
     def get_pressed_input(self, pressed):
-        """
-        Overridable get pressed keys
-        """
+        """Overridable get pressed keys"""
         pass
 
     def draw(self, screen):
+        """Overridable draw placeholder"""
+        pass
+
+    def on_collide(self, actor: "Actor"):
         """
-        Overridable draw placeholder
+        Overridable collide placeholder. Called when an object in this object's masks collides with its rect
+        :param actor: Actor collided with
         """
         pass
 
     def __del__(self):
         self._destroy()
+
+    def check_collisions(self):
+        for mask in self._collision_masks:
+            for actor in self.collidable[mask]:
+                if self.rect.colliderect(actor.rect):
+                    self.on_collide(actor)
+
 
     def _destroy(self):
         if self in Actor.actors:

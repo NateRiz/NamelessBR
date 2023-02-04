@@ -1,4 +1,4 @@
-from math import sqrt, copysign, atan2, degrees
+from math import copysign, atan2, degrees
 import pygame
 from time import time
 
@@ -226,7 +226,7 @@ class Player(Actor):
         center_y = self.get_screen().get_size()[1] // 2
         direction = normalize((mouse_x - center_x, mouse_y - center_y))
         position = list(self.rect.center)
-        bullet = Simple(position, direction, self.get_current_room())
+        bullet = Simple(position, direction)
         self.get_current_room().spawn_projectile(bullet)
         self.send_to_server({MessageMapper.SHOOT_PROJECTILE_REQUEST: ShootProjectileRequest(position, direction)})
 

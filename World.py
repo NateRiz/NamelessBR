@@ -5,6 +5,7 @@ from Engine.Singleton import Singleton
 from Map.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
+from Projectile.Projectile import Projectile
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 
@@ -51,10 +52,10 @@ class World(metaclass=Singleton):
 
     def update_room(self, change_rooms_response: ChangeRoomsResponse):
         src = self.room.coordinates if self.room else None
-
         if src != change_rooms_response.room_coordinates:
             self.room = RoomFactory.create(change_rooms_response.room_coordinates, len(self.map))
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
+        [self.room.spawn_projectile(Projectile(p.position, p.direction)) for p in change_rooms_response.projectiles]
         if self.get_my_player() is not None:
             self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
 
@@ -77,6 +78,7 @@ class World(metaclass=Singleton):
         Call all actor updates
         """
         Actor.ActorManager.update_all()
+        Actor.ActorManager.check_collisions_all()
 
     def draw(self):
         """

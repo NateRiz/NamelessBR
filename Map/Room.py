@@ -27,7 +27,7 @@ class Room(Actor):
         self.doors: dict[int, Door] = {}
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
-        self.snail = Passive(Snail())
+        # self.snail = Passive(Snail())
         self.projectiles: set[Projectile] = set()
 
     def draw(self, screen):

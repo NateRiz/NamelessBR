@@ -63,6 +63,7 @@ class Map:
         return list(players_in_room)
 
     def add_projectile(self, player_id: int, shoot_projectile: ShootProjectileRequest):
+        return
         y, x = self.players[player_id].map_coordinates
         room = self.map[y][x]
-        room.spawn_projectile(Simple(shoot_projectile.position, shoot_projectile.direction, room))
+        room.spawn_projectile(Simple(shoot_projectile.position, shoot_projectile.direction))
