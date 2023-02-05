@@ -69,7 +69,9 @@ class Actor:
     Inheriting also subscribes it to update/poll/draw.
     """
 
-    # Every instance that inherits from Actor.
+    # Every instance that inherits from Actor. This is the only container that contains true references in this program.
+    # Everything else that creates an actor creates a weakref proxy that is ignored by garbage collection. Ensure that
+    # an actor is not used after its freed.
     actors = set()
     # All drawable objects
     # Indices represent the layer in which we draw to the screen.
@@ -80,11 +82,23 @@ class Actor:
 
     @classmethod
     def new(cls, *args, **kwargs):
+        """
+        The factory method for creating actors. init is disabled for actors. References are stored in the static actors
+        set. Everything else uses weakrefs which is ignored by gc.
+        :param args: init args
+        :param kwargs: init kwargs
+        :return: weakref to new object
+        """
         obj = super().__new__(cls)
         obj.__init__(*args, **kwargs)
         return weakref.proxy(obj)
 
     def add_child(self, obj):
+        """
+        Adds a child actor. All children are automatically freed when this object is freed.
+        :param obj: Child actor
+        :return: passed in obj
+        """
         self.children.append(obj)
         return self.children[-1]
 
@@ -92,6 +106,10 @@ class Actor:
         raise Exception("Actors cannot be directly initialized. Use: Actor.new()")
 
     def free(self):
+        """
+        Mark the object for deletion. The reference will be removed during the ActorManager.clean_all stage.
+        Recursively free children objects.
+        """
         self._is_marked_for_deletion = True
         for child in self.children:
             child.free()

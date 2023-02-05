@@ -11,3 +11,6 @@ class Projectile(Actor):
         self.add_collision_mask(CollisionLayer.WALL)
         self.position = position
         self.direction = direction
+
+    def on_collide(self, actor: "Actor"):
+        self.free()

@@ -22,6 +22,3 @@ class Simple(Projectile):
         self.position[0] += self.speed * self.direction[0]
         self.position[1] += self.speed * self.direction[1]
         self.check_collisions()
-
-    def on_collide(self, actor: "Actor"):
-        print(f"Collided with {actor}")

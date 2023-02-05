@@ -36,7 +36,8 @@ class Debugger(Actor):
         self.metrics["Memory"] = F"{self._get_memory_usage()} MB"
         self.metrics["Actors"] = F"{len(Actor.actors)} [{Counter([type(i) for i in Actor.actors]).most_common()[0]}]"
         self.metrics["Room"] = F"{self.get_world().room.coordinates} (Y,X)"
-        self.metrics["Position"] = F"{int(self.get_world().get_my_player().pos[0])}, {int(self.get_world().get_my_player().pos[1])}"
+        self.metrics[
+            "Position"] = F"{int(self.get_world().get_my_player().pos[0])}, {int(self.get_world().get_my_player().pos[1])}"
 
     @debug
     def draw(self, screen):
@@ -80,7 +81,22 @@ class Debugger(Actor):
             text = self.font.render(F"{k}: {v}", True, (255, 255, 255))
             panel.blit(text, (8, 8 + i * 2 * self.font.get_height()))
 
+        self._add_actors_to_panel(panel)
         screen.blit(panel, (screen.get_width() - panel_size[0], 0))
+
+    def _add_actors_to_panel(self, panel):
+        # Draw actor list
+        top = 8 + (len(self.metrics.items()) + 1) * 2 * self.font.get_height()
+        panel_size = panel.get_size()
+        bot = panel_size[1] - 8
+        sorted_counts = sorted(Counter([(str(type(i))) for i in Actor.actors]).items(), key=lambda x: (-x[1], x[0]))
+        for i, (cls, count) in enumerate(sorted_counts):
+            text = self.font.render(F'{cls[cls.rfind(".")+1: cls.rfind(">")-1]}: {count}', True, (255, 255, 255))
+            panel.blit(text, (8, top + i * 2 * self.font.get_height()))
+            next_line = top + (i+1) * 2 * self.font.get_height()
+            if next_line > panel_size[1]:
+                break
+
 
     def _get_client_metrics(self):
         return self.get_world().client.get_incoming_kb_metric()
