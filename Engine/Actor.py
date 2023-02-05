@@ -84,11 +84,17 @@ class Actor:
         obj.__init__(*args, **kwargs)
         return weakref.proxy(obj)
 
+    def add_child(self, obj):
+        self.children.append(obj)
+        return self.children[-1]
+
     def __new__(*args, **kwargs):
         raise Exception("Actors cannot be directly initialized. Use: Actor.new()")
 
     def free(self):
         self._is_marked_for_deletion = True
+        for child in self.children:
+            child.free()
 
     def __init__(self):
         self.children = []
