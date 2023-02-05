@@ -14,7 +14,9 @@ class Map:
     def update(self):
         for p in self.players.values():
             y, x = p.map_coordinates
-            self.map[y][x].update()
+            room = self.map[y][x]
+            room.update()
+            [p.check_collisions() for p in room.projectiles]
 
 
     def generate(self, player_ids):

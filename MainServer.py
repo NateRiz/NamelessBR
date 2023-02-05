@@ -1,4 +1,5 @@
 from multiprocessing import Process
+from threading import Thread
 
 import pygame
 
@@ -10,11 +11,14 @@ from ServerLogic import ServerLogic
 
 
 class MainServer:
-    def __init__(self):
+    def __init__(self, headless):
         self.server = Server()
         self.server_logic = ServerLogic(self.server)
         self.clock = pygame.time.Clock()
         self.MAX_FPS = 60
+        self._is_headless_server_ready = False
+        if headless:
+            Thread(target=self._poll_user_input).start()
 
     def start_server(self):
         while True:
@@ -24,9 +28,11 @@ class MainServer:
                     self.server.send_all({MessageMapper.LIST_CLIENTS_RESPONSE: ListClientsResponse(
                         list(self.server.clients.keys()))})
                 if MessageMapper.START in message.message:
-                    self.server_logic.on_start()
-                    self.server.send_all({MessageMapper.START: Empty()})
                     break
+            if self._is_headless_server_ready:
+                break
+        self.server_logic.on_start()
+        self.server.send_all({MessageMapper.START: Empty()})
         self._start_game()
 
     def _start_game(self):
@@ -34,16 +40,21 @@ class MainServer:
             self.clock.tick(self.MAX_FPS)
             self.server_logic.update()
 
+    def _poll_user_input(self):
+        input("###########################\n#Enter to start the server#\n###########################")
+        self._is_headless_server_ready = True
 
-def _create_server():
-    MainServer().start_server()
+
+def _create_server(headless):
+    MainServer(headless).start_server()
 
 
 def create_server(should_start_new_process):
     if should_start_new_process:
-        Process(target=_create_server).start()
+        Process(target=_create_server, args=(False,)).start()
         return
-    _create_server()
+    else:
+        _create_server(True)
 
 
 def main():

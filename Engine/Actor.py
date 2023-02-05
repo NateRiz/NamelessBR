@@ -193,7 +193,7 @@ class Actor:
 
     def check_collisions(self):
         for mask in self._collision_masks:
-            for actor in self.collidable[mask]:
+            for actor in Actor.collidable[mask]:
                 if self.rect.colliderect(actor.rect):
                     self.on_collide(actor)
 
