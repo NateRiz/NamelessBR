@@ -1,5 +1,5 @@
 from time import time
-
+from collections import Counter
 import pygame
 import os
 import psutil
@@ -34,7 +34,7 @@ class Debugger(Actor):
         self.metrics["Player Id"] = self.get_world().my_id
         self.metrics["Client Incoming"] = F"{self._get_client_metrics()} KB/s"
         self.metrics["Memory"] = F"{self._get_memory_usage()} MB"
-        self.metrics["Actors"] = F"{len(Actor.actors)}"
+        self.metrics["Actors"] = F"{len(Actor.actors)} [{Counter([type(i) for i in Actor.actors]).most_common()[0]}]"
         self.metrics["Room"] = F"{self.get_world().room.coordinates} (Y,X)"
         self.metrics["Position"] = F"{int(self.get_world().get_my_player().pos[0])}, {int(self.get_world().get_my_player().pos[1])}"
 

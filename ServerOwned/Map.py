@@ -27,7 +27,7 @@ class Map:
         self.map = map_generator.map
         self.end_position = map_generator.end_room
         for id_ in player_ids:
-            player = Player(id_, False)
+            player = Player.new(id_, False)
             player.map_coordinates = map_generator.players[id_]
             self.players[id_] = player
             y, x = player.map_coordinates

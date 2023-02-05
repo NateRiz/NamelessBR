@@ -23,12 +23,12 @@ class Room(Actor):
         self.width = 2500
         self.height = 1500
         self.surface = pygame.Surface((self.width, self.height))
-        self.ground = Ground(self.surface)
+        self.ground = Ground.new(self.surface)
         self.doors: dict[int, Door] = {}
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
         # self.snail = Passive(Snail())
-        self.projectiles: set[Projectile] = set()
+        self.projectiles: list[Projectile] = []
 
     def draw(self, screen):
         """
@@ -62,23 +62,23 @@ class Room(Actor):
         Add doors so long as they lead to another room in the map.
         """
         if self.coordinates[0] > 0:
-            self.doors[Door.NORTH] = Door(self.surface, Door.NORTH, (self.coordinates[0] - 1, self.coordinates[1]))
+            self.doors[Door.NORTH] = Door.new(self.surface, Door.NORTH, (self.coordinates[0] - 1, self.coordinates[1]))
 
         if self.coordinates[1] + 1 < map_size:
-            self.doors[Door.EAST] = Door(self.surface, Door.EAST, (self.coordinates[0], self.coordinates[1] + 1))
+            self.doors[Door.EAST] = Door.new(self.surface, Door.EAST, (self.coordinates[0], self.coordinates[1] + 1))
 
         if self.coordinates[0] + 1 < map_size:
-            self.doors[Door.SOUTH] = Door(self.surface, Door.SOUTH, (self.coordinates[0] + 1, self.coordinates[1]))
+            self.doors[Door.SOUTH] = Door.new(self.surface, Door.SOUTH, (self.coordinates[0] + 1, self.coordinates[1]))
 
         if self.coordinates[1] > 0:
-            self.doors[Door.WEST] = Door(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))
+            self.doors[Door.WEST] = Door.new(self.surface, Door.WEST, (self.coordinates[0], self.coordinates[1] - 1))
 
     def add_walls(self):
         wall_size = 64
-        top = Wall(pygame.rect.Rect(0, -wall_size, self.width + wall_size, wall_size))
-        right = Wall(pygame.rect.Rect(self.width, 0, wall_size, self.height + wall_size))
-        left = Wall(pygame.rect.Rect(-wall_size, self.height, self.width + wall_size, wall_size))
-        bottom = Wall(pygame.rect.Rect(-wall_size, -wall_size, wall_size, self.height + wall_size))
+        top = Wall.new(pygame.rect.Rect(0, -wall_size, self.width + wall_size, wall_size))
+        right = Wall.new(pygame.rect.Rect(self.width, 0, wall_size, self.height + wall_size))
+        left = Wall.new(pygame.rect.Rect(-wall_size, self.height, self.width + wall_size, wall_size))
+        bottom = Wall.new(pygame.rect.Rect(-wall_size, -wall_size, wall_size, self.height + wall_size))
 
         self.walls += [top, right, left, bottom]
 
@@ -86,7 +86,7 @@ class Room(Actor):
         if player_id in self.players:
             return
         is_me = self.get_world().my_id == player_id
-        self.players[player_id] = Player(player_id, is_me)
+        self.players[player_id] = Player.new(player_id, is_me)
         self.players[player_id].pos = player.position
 
     def try_remove_player(self, player_id):
@@ -95,8 +95,15 @@ class Room(Actor):
         del self.players[player_id]
 
     def spawn_projectile(self, projectile: Projectile):
-        self.projectiles.add(projectile)
+        self.projectiles.append(projectile)
 
     def remove_projectile(self, projectile: Projectile):
         if projectile in self.projectiles:
             self.projectiles.remove(projectile)
+
+    def free(self):
+        super().free()
+        [p.free() for p in self.players.values()]
+        [d.free() for d in self.doors.values()]
+        [w.free() for w in self.walls]
+        self.ground.free()

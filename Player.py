@@ -23,7 +23,7 @@ class Player(Actor):
             self.set_draw_layer(DrawLayer.PLAYER)
         else:
             self.set_draw_layer(DrawLayer.ENEMY_PLAYER)
-        self.camera = Camera()
+        #self.camera = Camera.new()
         self.map_coordinates = (-1, -1)
         self.pos: list = [800, 500]  # Absolute position in room
         self.collision_size: list = [6, 6]  # Marked by small square inside the player
@@ -226,7 +226,7 @@ class Player(Actor):
         center_y = self.get_screen().get_size()[1] // 2
         direction = normalize((mouse_x - center_x, mouse_y - center_y))
         position = list(self.rect.center)
-        bullet = Simple(position, direction)
+        bullet = Simple.new(position, direction)
         self.get_current_room().spawn_projectile(bullet)
         self.send_to_server({MessageMapper.SHOOT_PROJECTILE_REQUEST: ShootProjectileRequest(position, direction)})
 

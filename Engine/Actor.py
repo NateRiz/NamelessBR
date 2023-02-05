@@ -55,6 +55,12 @@ class ActorManager:
         for actor in Actor.actors:
             actor.check_collisions()
 
+    @staticmethod
+    def clean_all():
+        Actor.actors = set(filter(lambda a: not a._is_marked_for_deletion, Actor.actors))
+
+
+
 
 class Actor:
     """
@@ -64,8 +70,7 @@ class Actor:
     """
 
     # Every instance that inherits from Actor.
-    # Weak ref because we want GC to take care of it if this is the only reference left to it.
-    actors = weakref.WeakSet()
+    actors = set()
     # All drawable objects
     # Indices represent the layer in which we draw to the screen.
     drawable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(DrawLayer))]
@@ -73,8 +78,21 @@ class Actor:
     # Indices represent the layer in which the object resides
     collidable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(CollisionLayer))]
 
+    @classmethod
+    def new(cls, *args, **kwargs):
+        obj = super().__new__(cls)
+        obj.__init__(*args, **kwargs)
+        return weakref.proxy(obj)
+
+    def __new__(*args, **kwargs):
+        raise Exception("Actors cannot be directly initialized. Use: Actor.new()")
+
+    def free(self):
+        self._is_marked_for_deletion = True
 
     def __init__(self):
+        self.children = []
+        self._is_marked_for_deletion = False
         self._draw_layer = DrawLayer.NONE
         # Collision mask is the collision layer that this object scans to collide with
         self._collision_masks: set[int] = set()
@@ -157,7 +175,5 @@ class Actor:
 
 
     def _destroy(self):
-        if self in Actor.actors:
-            Actor.actors.remove(self)
         if self in Actor.drawable[self._draw_layer]:
             Actor.drawable[self._draw_layer].remove(self)

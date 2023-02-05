@@ -1,3 +1,4 @@
+import sys
 import json
 import socket
 from collections import deque
@@ -114,6 +115,6 @@ class Client:
             data = self.socket.recv(Server.BUF_SIZE)
             if data:
                 incoming_stream.append(data)
-        except ConnectionError:
+        except ConnectionError as e:
             print(f"Connection removed with {socket.gethostbyname(socket.gethostname())}")
-            exit(-1)
+            raise e

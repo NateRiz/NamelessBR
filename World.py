@@ -28,8 +28,8 @@ class World(metaclass=Singleton):
         """
         Immediately called once when the game starts
         """
-        self.client_logic = ClientLogic()
-        self.debugger = Debugger()
+        self.client_logic = ClientLogic.new()
+        self.debugger = Debugger.new()
         self.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):
@@ -51,11 +51,14 @@ class World(metaclass=Singleton):
         return None
 
     def update_room(self, change_rooms_response: ChangeRoomsResponse):
-        src = self.room.coordinates if self.room else None
+        src = None
+        if self.room is not None:
+            src = self.room.coordinates
+            self.room.free()
         if src != change_rooms_response.room_coordinates:
             self.room = RoomFactory.create(change_rooms_response.room_coordinates, len(self.map))
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
-        [self.room.spawn_projectile(Projectile(p.position, p.direction)) for p in change_rooms_response.projectiles]
+        # [self.room.spawn_projectile(Simple.new(p.position, p.direction)) for p in change_rooms_response.projectiles]
         if self.get_my_player() is not None:
             self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
 
@@ -79,6 +82,7 @@ class World(metaclass=Singleton):
         """
         Actor.ActorManager.update_all()
         Actor.ActorManager.check_collisions_all()
+        Actor.ActorManager.clean_all()
 
     def draw(self):
         """

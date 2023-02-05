@@ -100,11 +100,12 @@ class ServerLogic:
 
     def _shoot_projectile(self, _message_type, message, owner):
         # TODO player entering room with bullets already shot
+        return
         request = ShootProjectileRequest().load(message)
         self.map.add_projectile(owner, request)
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
-        master_room.spawn_projectile(Simple(request.position, request.direction))
+        master_room.spawn_projectile(Simple.new(request.position, request.direction))
         other_players_in_room = self.map.get_players_in_room(owner)
         for player in other_players_in_room:
             self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
