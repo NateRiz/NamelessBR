@@ -149,9 +149,12 @@ class Server:
             data = client.recv(Server.BUF_SIZE)
             if data:
                 incoming_stream.append(data)
-        except ConnectionError:
+        except ConnectionError as e:
             print(f"Connection removed with {socket.gethostbyname(socket.gethostname())}")
-            return
+            raise e
         except TimeoutError:
             print("Server socket timeout")
             pass
+        except Exception as e:
+            print(e)
+            raise e

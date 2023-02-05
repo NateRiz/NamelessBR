@@ -41,7 +41,7 @@ class MainServer:
             self.server_logic.update()
 
     def _poll_user_input(self):
-        input("###########################\n#Enter to start the server#\n###########################")
+        input("\n###########################\n#Enter to start the server#\n###########################\n")
         self._is_headless_server_ready = True
 
 
