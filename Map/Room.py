@@ -97,6 +97,7 @@ class Room(Actor):
     def try_remove_player(self, player_id):
         if player_id not in self.players:
             return
+        self.players[player_id].free()
         del self.players[player_id]
 
     def spawn_projectile(self, projectile: Projectile):

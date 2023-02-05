@@ -99,8 +99,6 @@ class ServerLogic:
                 master_room.coordinates, players, projectiles)}, player)
 
     def _shoot_projectile(self, _message_type, message, owner):
-        # TODO player entering room with bullets already shot
-        return
         request = ShootProjectileRequest().load(message)
         self.map.add_projectile(owner, request)
         y, x = self.map.players[owner].map_coordinates

@@ -54,8 +54,9 @@ class World(metaclass=Singleton):
         src = None
         if self.room is not None:
             src = self.room.coordinates
-            self.room.free()
         if src != change_rooms_response.room_coordinates:
+            if self.room:
+                self.room.free()
             self.room = RoomFactory.create(change_rooms_response.room_coordinates, len(self.map))
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
         # [self.room.spawn_projectile(Simple.new(p.position, p.direction)) for p in change_rooms_response.projectiles]

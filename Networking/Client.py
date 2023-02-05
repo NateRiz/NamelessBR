@@ -81,6 +81,8 @@ class Client:
         incoming_stream = deque()
         while True:
             message = self._get_next_message(incoming_stream)
+            if "{'3':" not in str(message):
+                print(F"C < {message}")
             self.message_queue.append(Message(-1, message))
 
     def _get_next_message(self, incoming_stream) -> dict:
