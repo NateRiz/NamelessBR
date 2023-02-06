@@ -3,12 +3,14 @@ from math import sqrt
 import pygame
 
 from Engine.Actor import Actor
+from Engine.CollisionLayer import CollisionLayer
 from Engine.DrawLayer import DrawLayer
 
 
 class BaseEnemy(Actor):
     def __init__(self):
         super().__init__()
+        self.set_collision_layer(CollisionLayer.ENEMY)
         self.velocity: list = [0, 0]
         self.max_speed: int = 1
         self.acceleration_rate: float = .2
@@ -18,6 +20,7 @@ class BaseEnemy(Actor):
         self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
         self.size = 8
         self.collision_size = 6
+        self.health = 2
 
     @property
     def rect(self):

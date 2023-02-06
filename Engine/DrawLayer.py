@@ -14,4 +14,5 @@ class DrawLayer(IntEnum):
     # Objects draw themselves to a room and the room draws the objects at the end of the frame.
     ROOM = 6
     PLAYER = 7
-    DEBUG = 8
+    HUD = 8
+    DEBUG = 9

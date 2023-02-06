@@ -7,3 +7,4 @@ class CollisionLayer(IntEnum):
     PLAYER = 1
     PROJECTILE = 2
     WALL = 3
+    ENEMY = 4

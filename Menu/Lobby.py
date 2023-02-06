@@ -39,7 +39,7 @@ class Lobby:
         Wait and handle server messages for adding clients and starting the game
         """
         if self.is_host:
-            if len(self.player_container.containers) > 1:
+            if len(self.player_container.containers) >= 1:
                 self.start_button.set_hidden(False)
                 self.start_button.set_enabled()
 

@@ -23,7 +23,7 @@ class Player(Actor):
             self.set_draw_layer(DrawLayer.PLAYER)
         else:
             self.set_draw_layer(DrawLayer.ENEMY_PLAYER)
-        #self.camera = Camera.new()
+        # self.camera = Camera.new()
         self.map_coordinates = (-1, -1)
         self.pos: list = [800, 500]  # Absolute position in room
         self.collision_size: list = [6, 6]  # Marked by small square inside the player
@@ -46,6 +46,8 @@ class Player(Actor):
         self.last_shoot_time = time()
         self.is_shot_queued = False  # Signifies that next update should spawn a shot (Don't add logic to poll())
 
+        self.max_health = 100
+        self.health = self.max_health
         ##############
         # Networking
         ##############

@@ -10,6 +10,7 @@ from random import randint
 class BaseAI(Actor):
     def __init__(self, enemy: BaseEnemy):
         super().__init__()
+        self.add_child(enemy)
         self.enemy = enemy
         self.ai_state = AIState.NONE
         self.wander_position: list[int] | None = None

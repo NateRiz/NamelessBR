@@ -2,10 +2,10 @@ from ClientLogic import ClientLogic
 from Debugger import Debugger
 from Engine import Actor
 from Engine.Singleton import Singleton
+from HUD import HUD
 from Map.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
-from Projectile.Projectile import Projectile
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 
@@ -23,6 +23,7 @@ class World(metaclass=Singleton):
         self.map = None
         self.debugger = None
         self.my_id = -1
+        self.hud = None
 
     def on_start(self):
         """
@@ -30,6 +31,7 @@ class World(metaclass=Singleton):
         """
         self.client_logic = ClientLogic.new()
         self.debugger = Debugger.new()
+        self.hud = HUD.new()
         self.client.send({MessageMapper.INITIAL_SYNC_REQUEST: None})
 
     def on_initial_sync_response(self, initial_sync_response: InitialSyncResponse):

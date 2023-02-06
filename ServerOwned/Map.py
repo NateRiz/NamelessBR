@@ -1,5 +1,6 @@
 from Map.MapGenerator import MapGenerator
 from Map.Room import Room
+from Map.RoomFactory import RoomFactory
 from Player import Player
 from Projectile.Simple import Simple
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
@@ -10,6 +11,7 @@ class Map:
         self.map: list[list[Room]] = []
         self.end_position = []  # End room coordinate in map
         self.players: dict[int, Player] = {}  # Server owned player object
+        self.map_size = 30
 
     def update(self):
         for p in self.players.values():
@@ -23,22 +25,31 @@ class Map:
         if self.map:
             # Already has been generated.
             return
-        map_generator = MapGenerator(player_ids)
+        map_generator = MapGenerator(player_ids, self.map_size)
         map_generator.generate()
         # map_generator.debug_draw_map()
         self.map = map_generator.map
         self.end_position = map_generator.end_room
+
         for id_ in player_ids:
             player = Player.new(id_, False)
             player.map_coordinates = map_generator.players[id_]
+            self.load_room(*player.map_coordinates)
             self.players[id_] = player
             y, x = player.map_coordinates
             self.map[y][x].players[id_] = player
 
+    def load_room(self, y, x):
+        if self.map[y][x] is not None:
+            return
+        self.map[y][x] = RoomFactory.create([y, x], self.map_size)
+
     def change_player_room(self, player_id, destination):
+        y, x = destination
         src = self.players[player_id].map_coordinates
         # Copy the player into the next room
-        self.map[destination[0]][destination[1]].players[player_id] = self.players[player_id]
+        self.load_room(y, x)
+        self.map[y][x].players[player_id] = self.players[player_id]
         # Remove from the previous room
         del self.map[src[0]][src[1]].players[player_id]
         # Update player map coordinates

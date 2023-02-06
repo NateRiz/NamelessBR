@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import DefaultDict, Callable
 
+from Engine.Actor import Actor
 from MessageMapper import MessageMapper
 from Projectile.Simple import Simple
 from Serializable.ChangeRoomsRequest import ChangeRoomsRequest
@@ -9,6 +10,7 @@ from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.LeaveRoomResponse import LeaveRoomResponse
 from Serializable.Movement import Movement
 import Serializable
+from Serializable.ServerMetricsResponse import ServerMetricsResponse
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
 from Serializable.ShootProjectileResponse import ShootProjectileResponse
 from ServerOwned.Map import Map
@@ -28,6 +30,7 @@ class ServerLogic:
             MessageMapper.INITIAL_SYNC_REQUEST: self._initial_sync_request,
             MessageMapper.CHANGE_ROOMS_REQUEST: self._change_rooms_request,
             MessageMapper.SHOOT_PROJECTILE_REQUEST: self._shoot_projectile,
+            MessageMapper.SERVER_METRICS_REQUEST: self._server_metrics
         })
         self.map = Map()
 
@@ -107,6 +110,9 @@ class ServerLogic:
         other_players_in_room = self.map.get_players_in_room(owner)
         for player in other_players_in_room:
             self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
+
+    def _server_metrics(self, _message_type, message, owner):
+        self.server.send({MessageMapper.SERVER_METRICS_RESPONSE: ServerMetricsResponse(len(Actor.actors))}, owner)
 
     def _unknown(self, message_type, message, owner):
         print(F"WARNING: Received message from P[{owner}] with unknown message type: {message_type} {message}")

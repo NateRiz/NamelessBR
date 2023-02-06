@@ -7,6 +7,8 @@ import psutil
 from Engine.Actor import Actor
 from Engine.Debug import debug
 from Engine.DrawLayer import DrawLayer
+from MessageMapper import MessageMapper
+from Serializable.Empty import Empty
 
 
 class Debugger(Actor):
@@ -22,6 +24,8 @@ class Debugger(Actor):
         self.fps_incrementer = 0
         self.last_fps = 0
         self.time_since_last_fps_reset = time()
+        self.time_since_last_server_message = time()
+        self.server_metrics = None
 
     @debug
     def update(self):
@@ -29,6 +33,7 @@ class Debugger(Actor):
         Updates metrics every frame
         """
         self._update_fps_counter()
+        self._get_server_metrics()
 
         self.metrics["FPS"] = F"{self.last_fps}"
         self.metrics["Player Id"] = self.get_world().my_id
@@ -38,6 +43,11 @@ class Debugger(Actor):
         self.metrics["Room"] = F"{self.get_world().room.coordinates} (Y,X)"
         self.metrics[
             "Position"] = F"{int(self.get_world().get_my_player().pos[0])}, {int(self.get_world().get_my_player().pos[1])}"
+
+        # Server metrics
+        if not self.server_metrics:
+            return
+        self.metrics["Server Actors"] = F"{self.server_metrics.actors}"
 
     @debug
     def draw(self, screen):
@@ -97,7 +107,6 @@ class Debugger(Actor):
             if next_line > panel_size[1]:
                 break
 
-
     def _get_client_metrics(self):
         return self.get_world().client.get_incoming_kb_metric()
 
@@ -111,3 +120,14 @@ class Debugger(Actor):
             self.last_fps = self.fps_incrementer
             self.fps_incrementer = 0
         self.fps_incrementer += 1
+
+    def _get_server_metrics(self):
+        if self.get_world().my_id != 0:
+            return
+
+        if time() - self.time_since_last_server_message >= 4:
+            self.time_since_last_server_message = time()
+            self.send_to_server({MessageMapper.SERVER_METRICS_REQUEST: Empty()})
+
+    def set_server_metrics(self, server_metrics):
+        self.server_metrics = server_metrics

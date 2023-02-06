@@ -3,14 +3,11 @@ import pygame
 from pygame.locals import QUIT
 from random import seed, randint, shuffle
 
-from Map.Room import Room
-from Map.RoomFactory import RoomFactory
-
 
 class MapGenerator:
-    def __init__(self, player_ids):
-        self.map_length = 30
-        self.map_width = 30
+    def __init__(self, player_ids, map_size):
+        self.map_length = map_size
+        self.map_width = map_size
         self.map = []
         self.end_room = [-1, -1]
         self.players = {i: [-1, -1] for i in player_ids}
@@ -54,7 +51,8 @@ class MapGenerator:
         return self.map
 
     def _create_base_map(self):
-        self.map = [[RoomFactory.create([y, x], self.map_width) for x in range(self.map_length)] for y in range(self.map_width)]
+        #self.map = [[RoomFactory.create([y, x], self.map_width) for x in range(self.map_length)] for y in range(self.map_width)]
+        self.map = [[None for x in range(self.map_length)] for y in range(self.map_width)]
         self._place_players_and_end_room()
 
     def _place_players_and_end_room(self):

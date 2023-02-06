@@ -9,6 +9,7 @@ from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
 from Serializable.InitialSyncResponse import InitialSyncResponse
 from Serializable.LeaveRoomResponse import LeaveRoomResponse
 from Serializable.Movement import Movement
+from Serializable.ServerMetricsResponse import ServerMetricsResponse
 from Serializable.ShootProjectileResponse import ShootProjectileResponse
 
 
@@ -26,6 +27,7 @@ class ClientLogic(Actor):
             MessageMapper.CHANGE_ROOMS_RESPONSE: self._change_rooms_response,
             MessageMapper.LEAVE_ROOM_RESPONSE: self._leave_room_response,
             MessageMapper.SHOOT_PROJECTILE_RESPONSE: self._shoot_projectile_response,
+            MessageMapper.SERVER_METRICS_RESPONSE: self._server_metrics
         })
 
     def update(self):
@@ -67,6 +69,10 @@ class ClientLogic(Actor):
         response = ShootProjectileResponse().load(message)
         projectile = Simple.new(response.position, response.direction)
         self.get_world().room.spawn_projectile(projectile)
+
+    def _server_metrics(self, message_type: int, message:dict):
+        response = ServerMetricsResponse().load(message)
+        self.get_world().debugger.set_server_metrics(response)
 
     def _unknown(self, message_type: int, message: dict):
         print(F"WARNING: Received message from [Server] with unknown message type: {message_type} {message}")
