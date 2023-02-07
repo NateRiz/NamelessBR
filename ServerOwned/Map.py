@@ -1,3 +1,4 @@
+from Engine.Actor import ActorManager
 from Map.MapGenerator import MapGenerator
 from Map.Room import Room
 from Map.RoomFactory import RoomFactory
@@ -17,8 +18,19 @@ class Map:
         for p in self.players.values():
             y, x = p.map_coordinates
             room = self.map[y][x]
-            room.update()
-            [p.check_collisions() for p in room.projectiles]
+            self._update_room(room)
+        ActorManager.clean_all()
+
+
+    def _update_room(self, room):
+        new_projectiles = set()
+        for projectile in room.projectiles:
+            if not projectile.is_alive():
+                continue
+            new_projectiles.add(projectile)
+            projectile.update()
+            projectile.check_collisions()
+        room.projectiles = new_projectiles
 
 
     def generate(self, player_ids):
@@ -76,7 +88,6 @@ class Map:
         return list(players_in_room)
 
     def add_projectile(self, player_id: int, shoot_projectile: ShootProjectileRequest):
-        return
         y, x = self.players[player_id].map_coordinates
         room = self.map[y][x]
-        room.spawn_projectile(Simple(shoot_projectile.position, shoot_projectile.direction))
+        room.spawn_projectile(Simple.new(shoot_projectile.position, shoot_projectile.direction))

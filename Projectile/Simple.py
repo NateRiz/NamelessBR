@@ -21,4 +21,3 @@ class Simple(Projectile):
     def update(self):
         self.position[0] += self.speed * self.direction[0]
         self.position[1] += self.speed * self.direction[1]
-        self.check_collisions()

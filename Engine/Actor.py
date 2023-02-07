@@ -4,6 +4,7 @@ from typing import List, Dict
 from Engine.CollisionLayer import CollisionLayer
 from Engine.Game import Game
 from Engine.DrawLayer import DrawLayer
+from Engine.Proxy import Proxy
 from Engine.Screen import Screen
 from Networking.Serializable import Serializable
 
@@ -91,7 +92,7 @@ class Actor:
         """
         obj = super().__new__(cls)
         obj.__init__(*args, **kwargs)
-        return weakref.proxy(obj)
+        return Proxy(obj)
 
     def add_child(self, obj):
         """
@@ -112,10 +113,11 @@ class Actor:
         """
         self._is_marked_for_deletion = True
         for child in self.children:
-            child.free()
+            if child.is_alive():
+                child.free()
 
     def __init__(self):
-        self.children = []
+        self.children: list["Actor"] = []
         self._is_marked_for_deletion = False
         self._draw_layer = DrawLayer.NONE
         # Collision mask is the collision layer that this object scans to collide with
@@ -188,9 +190,6 @@ class Actor:
         """
         pass
 
-    def __del__(self):
-        self._destroy()
-
     def check_collisions(self):
         for mask in self._collision_masks:
             for actor in Actor.collidable[mask]:
@@ -201,3 +200,4 @@ class Actor:
     def _destroy(self):
         if self in Actor.drawable[self._draw_layer]:
             Actor.drawable[self._draw_layer].remove(self)
+        self.destroy()

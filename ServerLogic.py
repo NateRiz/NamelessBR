@@ -40,7 +40,6 @@ class ServerLogic:
         """
         clients = list(self.server.clients.keys())
         self.map.generate(clients)
-        pass
 
     def update(self):
         """
@@ -54,7 +53,7 @@ class ServerLogic:
         while message is not None:
             self._dispatch(message)
             message = server.get_next_message()
-            self.map.update()
+        self.map.update()
 
     def _dispatch(self, message):
         for message_type, msg in message.message.items():
@@ -104,9 +103,7 @@ class ServerLogic:
     def _shoot_projectile(self, _message_type, message, owner):
         request = ShootProjectileRequest().load(message)
         self.map.add_projectile(owner, request)
-        y, x = self.map.players[owner].map_coordinates
-        master_room = self.map.map[y][x]
-        master_room.spawn_projectile(Simple.new(request.position, request.direction))
+
         other_players_in_room = self.map.get_players_in_room(owner)
         for player in other_players_in_room:
             self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)

@@ -28,7 +28,7 @@ class Room(Actor):
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
         self.snail = self.add_child(Passive.new(Snail.new()))
-        self.projectiles: list[Projectile] = []
+        self.projectiles: set[Projectile] = set()
 
     def draw(self, screen):
         """
@@ -101,15 +101,5 @@ class Room(Actor):
         del self.players[player_id]
 
     def spawn_projectile(self, projectile: Projectile):
-        self.projectiles.append(projectile)
-
-    def remove_projectile(self, projectile: Projectile):
-        if projectile in self.projectiles:
-            self.projectiles.remove(projectile)
-
-    def free(self):
-        super().free()
-        [p.free() for p in self.players.values()]
-        [d.free() for d in self.doors.values()]
-        [w.free() for w in self.walls]
-        self.ground.free()
+        self.projectiles.add(projectile)
+        self.add_child(projectile)
