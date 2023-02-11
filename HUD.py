@@ -11,6 +11,8 @@ class HUD(Actor):
 
     def draw(self, screen):
         player = self.get_world().get_my_player()
+        if player is None:
+            return
         w, h = screen.get_size()
         buffer = 8
         y = h - 64

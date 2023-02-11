@@ -3,6 +3,7 @@ from Engine.Actor import Actor
 from Engine.CollisionLayer import CollisionLayer
 from Engine.DrawLayer import DrawLayer
 from Map.Wall import Wall
+import Serializable.Projectile
 
 
 class Projectile(Actor):
@@ -22,5 +23,8 @@ class Projectile(Actor):
             self._on_collide_with_wall(actor)
 
 
-    def _on_collide_with_wall(self, actor):
+    def _on_collide_with_wall(self, _actor):
         self.free()
+
+    def get_serialized(self):
+        return Serializable.Projectile.Projectile(self.position, self.direction)

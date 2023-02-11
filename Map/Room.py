@@ -1,7 +1,7 @@
 import pygame
 
-from Enemy.AI.Passive import Passive
-from Enemy.Body.Snail import Snail
+from Enemy.AI.BaseAI import BaseAI
+from Enemy.AI.EnemyFactory import EnemyFactory
 from Engine.Actor import Actor
 from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
@@ -9,26 +9,22 @@ from Map.Ground import Ground
 from Map.Wall import Wall
 from Player import Player
 from Projectile.Projectile import Projectile
+from Settings import Settings
 
 
 class Room(Actor):
-    """
-    Contains a player and other entities
-    """
-
+    """Contains a player and other entities"""
     def __init__(self, coordinates):
         super().__init__()
         self.set_draw_layer(DrawLayer.ROOM)
         self.coordinates = coordinates
-        self.width = 2500
-        self.height = 1500
-        self.surface = pygame.Surface((self.width, self.height))
+        self.surface = pygame.Surface((Settings.ROOM_WIDTH, Settings.ROOM_HEIGHT))
         self.ground = self.add_child(Ground.new(self.surface))
         self.doors: dict[int, Door] = {}
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
-        self.snail = self.add_child(Passive.new(Snail.new()))
         self.projectiles: set[Projectile] = set()
+        self.enemies: list[BaseAI] = []
 
     def draw(self, screen):
         """
@@ -57,17 +53,17 @@ class Room(Actor):
         """
         return self.surface
 
-    def add_doors(self, map_size):
+    def add_doors(self):
         """
         Add doors so long as they lead to another room in the map.
         """
         if self.coordinates[0] > 0:
             self.doors[Door.NORTH] = Door.new(self.surface, Door.NORTH, (self.coordinates[0] - 1, self.coordinates[1]))
 
-        if self.coordinates[1] + 1 < map_size:
+        if self.coordinates[1] + 1 < Settings.MAP_SIZE:
             self.doors[Door.EAST] = Door.new(self.surface, Door.EAST, (self.coordinates[0], self.coordinates[1] + 1))
 
-        if self.coordinates[0] + 1 < map_size:
+        if self.coordinates[0] + 1 < Settings.MAP_SIZE:
             self.doors[Door.SOUTH] = Door.new(self.surface, Door.SOUTH, (self.coordinates[0] + 1, self.coordinates[1]))
 
         if self.coordinates[1] > 0:
@@ -78,10 +74,10 @@ class Room(Actor):
 
     def add_walls(self):
         wall_size = 64
-        top = Wall.new(pygame.rect.Rect(0, -wall_size, self.width + wall_size, wall_size))
-        right = Wall.new(pygame.rect.Rect(self.width, 0, wall_size, self.height + wall_size))
-        left = Wall.new(pygame.rect.Rect(-wall_size, self.height, self.width + wall_size, wall_size))
-        bottom = Wall.new(pygame.rect.Rect(-wall_size, -wall_size, wall_size, self.height + wall_size))
+        top = Wall.new(pygame.rect.Rect(0, -wall_size, Settings.ROOM_WIDTH + wall_size, wall_size))
+        right = Wall.new(pygame.rect.Rect(Settings.ROOM_WIDTH, 0, wall_size, Settings.ROOM_HEIGHT + wall_size))
+        left = Wall.new(pygame.rect.Rect(-wall_size, Settings.ROOM_HEIGHT, Settings.ROOM_WIDTH + wall_size, wall_size))
+        bottom = Wall.new(pygame.rect.Rect(-wall_size, -wall_size, wall_size, Settings.ROOM_HEIGHT + wall_size))
 
         self.walls += [top, right, left, bottom]
         for wall in self.walls:
@@ -103,3 +99,9 @@ class Room(Actor):
     def spawn_projectile(self, projectile: Projectile):
         self.projectiles.add(projectile)
         self.add_child(projectile)
+
+    def spawn_enemy(self, enemy_type, x, y):
+        enemy = EnemyFactory.create(enemy_type)
+        enemy.enemy.position = [x, y]
+        self.add_child(enemy)
+        self.enemies.append(enemy)

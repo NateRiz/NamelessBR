@@ -48,7 +48,7 @@ class World(metaclass=Singleton):
         Gets the local player.
         :return: local Player or None if game hasn't had initial sync yet.
         """
-        if self.my_id in self.room.players:
+        if self.room and self.my_id in self.room.players:
             return self.room.players[self.my_id]
         return None
 
@@ -59,9 +59,9 @@ class World(metaclass=Singleton):
         if src != change_rooms_response.room_coordinates:
             if self.room:
                 self.room.free()
-            self.room = RoomFactory.create(change_rooms_response.room_coordinates, len(self.map))
+            self.room = RoomFactory.create(change_rooms_response.room_coordinates)
+            RoomFactory.update_with_change_room_response(self.room, change_rooms_response)
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
-        # [self.room.spawn_projectile(Simple.new(p.position, p.direction)) for p in change_rooms_response.projectiles]
         if self.get_my_player() is not None:
             self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
 

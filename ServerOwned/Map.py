@@ -10,6 +10,7 @@ from Serializable.ShootProjectileRequest import ShootProjectileRequest
 class Map:
     def __init__(self):
         self.map: list[list[Room]] = []
+        self.map_properties = []
         self.end_position = []  # End room coordinate in map
         self.players: dict[int, Player] = {}  # Server owned player object
         self.map_size = 30
@@ -39,8 +40,9 @@ class Map:
             return
         map_generator = MapGenerator(player_ids, self.map_size)
         map_generator.generate()
-        # map_generator.debug_draw_map()
+        # map_generator._debug_draw_map()
         self.map = map_generator.map
+        self.map_properties = map_generator.map_properties
         self.end_position = map_generator.end_room
 
         for id_ in player_ids:
@@ -54,7 +56,8 @@ class Map:
     def load_room(self, y, x):
         if self.map[y][x] is not None:
             return
-        self.map[y][x] = RoomFactory.create([y, x], self.map_size)
+        self.map[y][x] = RoomFactory.create([y, x])
+        RoomFactory.update_with_room_properties(self.map[y][x], self.map_properties[y][x])
 
     def change_player_room(self, player_id, destination):
         y, x = destination

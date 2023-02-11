@@ -66,9 +66,10 @@ class ServerLogic:
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
         serialized = {owner: Serializable.Player.Player(self.map.players[owner].pos)}
+        enemies = [e.get_serialized() for e in master_room.enemies]
         self.server.send(
             {MessageMapper.INITIAL_SYNC_RESPONSE: InitialSyncResponse(owner, len(self.map.map)),
-             MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, serialized, [])},
+             MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, serialized, [], enemies)},
             owner)
 
     def _movement(self, message_type, message, owner):
@@ -95,10 +96,11 @@ class ServerLogic:
         master_room = self.map.map[y][x]
         all_player_ids = self.map.get_players_in_room(owner) + [owner]
         players = {p: Serializable.Player.Player(self.map.players[p].pos, self.map.players[p].map_coordinates) for p in all_player_ids}
-        projectiles = [Serializable.Projectile.Projectile(p.position, p.direction) for p in master_room.projectiles]
+        projectiles = [p.get_serialized() for p in master_room.projectiles]
+        enemies = [e.get_serialized() for e in master_room.enemies]
         for player in all_player_ids:
             self.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
-                master_room.coordinates, players, projectiles)}, player)
+                master_room.coordinates, players, projectiles, enemies)}, player)
 
     def _shoot_projectile(self, _message_type, message, owner):
         request = ShootProjectileRequest().load(message)

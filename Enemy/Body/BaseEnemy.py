@@ -2,6 +2,7 @@ from math import sqrt
 
 import pygame
 
+from Enemy.Body.EnemyType import EnemyType
 from Engine.Actor import Actor
 from Engine.CollisionLayer import CollisionLayer
 from Engine.DrawLayer import DrawLayer
@@ -11,6 +12,7 @@ class BaseEnemy(Actor):
     def __init__(self):
         super().__init__()
         self.set_collision_layer(CollisionLayer.ENEMY)
+        self.enemy_type = EnemyType.NONE
         self.velocity: list = [0, 0]
         self.max_speed: int = 1
         self.acceleration_rate: float = .2

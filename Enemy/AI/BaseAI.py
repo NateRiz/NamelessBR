@@ -5,6 +5,8 @@ from Enemy.Body.BaseEnemy import BaseEnemy
 from Engine.Actor import Actor
 
 from random import randint
+import Serializable.Enemy
+from Settings import Settings
 
 
 class BaseAI(Actor):
@@ -33,7 +35,10 @@ class BaseAI(Actor):
 
     def _generate_new_wander_position(self):
         buffer = 4
-        room_w = self.get_world().room.width
-        room_h = self.get_world().room.height
+        room_w = Settings.ROOM_WIDTH
+        room_h = Settings.ROOM_WIDTH
         self.wander_position = [randint(buffer, room_w - buffer), randint(buffer, room_h - buffer)]
         print(self.wander_position)
+
+    def get_serialized(self):
+        return Serializable.Enemy.Enemy(self.enemy.enemy_type, self.enemy.position)
