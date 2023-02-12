@@ -86,6 +86,10 @@ class ServerLogic:
 
         # Get players in last room
         last_room_player_ids = self.map.get_players_in_room(owner)
+        y, x = self.map.players[owner].map_coordinates
+        if not last_room_player_ids:
+            self.map.unload_room(y, x)
+
         # Let them know this player has left
         for player in last_room_player_ids:
             self.server.send({MessageMapper.LEAVE_ROOM_RESPONSE: LeaveRoomResponse(owner)}, player)

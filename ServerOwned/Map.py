@@ -16,23 +16,9 @@ class Map:
         self.map_size = 30
 
     def update(self):
-        for p in self.players.values():
-            y, x = p.map_coordinates
-            room = self.map[y][x]
-            self._update_room(room)
+        ActorManager.server_update_all()
+        ActorManager.check_collisions_all()
         ActorManager.clean_all()
-
-
-    def _update_room(self, room):
-        new_projectiles = set()
-        for projectile in room.projectiles:
-            if not projectile.is_alive():
-                continue
-            new_projectiles.add(projectile)
-            projectile.update()
-            projectile.check_collisions()
-        room.projectiles = new_projectiles
-
 
     def generate(self, player_ids):
         if self.map:
@@ -59,14 +45,17 @@ class Map:
         self.map[y][x] = RoomFactory.create([y, x])
         RoomFactory.update_with_room_properties(self.map[y][x], self.map_properties[y][x])
 
+    def unload_room(self, y, x):
+        room = self.map[y][x]
+        self.map_properties[y][x].update_properties(room)
+        self.map[y][x] = None
+        room.free()
+
     def change_player_room(self, player_id, destination):
         y, x = destination
-        src = self.players[player_id].map_coordinates
         # Copy the player into the next room
         self.load_room(y, x)
         self.map[y][x].players[player_id] = self.players[player_id]
-        # Remove from the previous room
-        del self.map[src[0]][src[1]].players[player_id]
         # Update player map coordinates
         self.players[player_id].map_coordinates = tuple(destination)
 

@@ -32,6 +32,14 @@ class ActorManager:
             actor.update()
 
     @staticmethod
+    def server_update_all():
+        """ Call the server update function on all actors"""
+        actors_to_update = list(Actor.actors)
+        for actor in actors_to_update:
+            actor.server_update()
+
+
+    @staticmethod
     def poll_input_all(event):
         """
         sends one poll event to all actors
@@ -170,6 +178,9 @@ class Actor:
     def update(self):
         """Overridable update placeholder"""
         pass
+
+    def server_update(self):
+        """ Overridable server update placeholder"""
 
     def poll_input(self, event):
         """Overridable poll placeholder"""

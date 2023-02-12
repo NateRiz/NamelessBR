@@ -22,7 +22,6 @@ class Projectile(Actor):
         elif isinstance(actor, BaseEnemy):
             self._on_collide_with_wall(actor)
 
-
     def _on_collide_with_wall(self, _actor):
         self.free()
 
