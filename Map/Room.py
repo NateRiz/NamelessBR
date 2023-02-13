@@ -9,8 +9,8 @@ from Map.Ground import Ground
 from Map.Wall import Wall
 from Player import Player
 from Projectile.Projectile import Projectile
+import Serializable.Enemy
 from Settings import Settings
-
 
 class Room(Actor):
     """Contains a player and other entities"""
@@ -24,7 +24,7 @@ class Room(Actor):
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
         self.projectiles: set[Projectile] = set()
-        self.enemies: list[BaseAI] = []
+        self.enemies: dict[int, BaseAI] = {}
 
     def draw(self, screen):
         """
@@ -100,8 +100,18 @@ class Room(Actor):
         self.projectiles.add(projectile)
         self.add_child(projectile)
 
-    def spawn_enemy(self, enemy_type, x, y):
-        enemy = EnemyFactory.create(enemy_type)
+    def spawn_enemy(self, _id, enemy_type, x, y):
+        enemy = EnemyFactory.create(_id, enemy_type)
         enemy.enemy.position = [x, y]
         self.add_child(enemy)
-        self.enemies.append(enemy)
+        self.enemies[_id] = enemy
+
+    def update_enemy(self, enemy_update: Serializable.Enemy.Enemy):
+        if enemy_update.my_id not in self.enemies:
+            return
+        enemy = self.enemies[enemy_update.my_id]
+        if enemy_update.position is not None:
+            enemy.enemy.position = list(enemy_update.position)
+        if enemy_update.target_position is not None:
+            enemy.target_position = list(enemy_update.target_position)
+        return

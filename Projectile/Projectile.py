@@ -20,7 +20,7 @@ class Projectile(Actor):
         if isinstance(actor, Wall):
             self._on_collide_with_wall(actor)
         elif isinstance(actor, BaseEnemy):
-            self._on_collide_with_wall(actor)
+            print("collided w enemy")
 
     def _on_collide_with_wall(self, _actor):
         self.free()

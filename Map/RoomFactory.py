@@ -15,11 +15,13 @@ class RoomFactory:
 
     @staticmethod
     def update_with_room_properties(room: Room, room_properties: RoomProperties):
+        """ Called by the server when loading a room """
         for enemy in room_properties.enemies:
             enemy_type, x, y = enemy
-            room.spawn_enemy(enemy_type, x, y)
+            room.spawn_enemy(-1, enemy_type, x, y)
 
     @staticmethod
     def update_with_change_room_response(room: Room, change_rooms_response: ChangeRoomsResponse):
+        """ Called by the client when loading a room"""
         [room.spawn_projectile(Simple.new(p.position, p.direction)) for p in change_rooms_response.projectiles]
-        [room.spawn_enemy(e.enemy_type, *e.position) for e in change_rooms_response.enemies]
+        [room.spawn_enemy(e.my_id, e.enemy_type, *e.position) for e in change_rooms_response.enemies]

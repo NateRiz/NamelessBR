@@ -1,4 +1,5 @@
 from math import sqrt, copysign
+from time import time
 
 from Enemy.AI.AIState import AIState
 from Enemy.Body.BaseEnemy import BaseEnemy
@@ -10,21 +11,24 @@ from Settings import Settings
 
 
 class BaseAI(Actor):
-    def __init__(self, enemy: BaseEnemy):
+    id_incrementer = -1
+
+    def __init__(self, _id: int, enemy: BaseEnemy):
         super().__init__()
+        self.my_id = _id
+        if _id == -1:  # Created by server
+            BaseAI.id_incrementer += 1
+            self.my_id = BaseAI.id_incrementer
         self.add_child(enemy)
         self.enemy = enemy
         self.ai_state = AIState.NONE
-        self.wander_position: list[int] | None = None
+        self.target_position: list[int] = list(self.enemy.position)
+        self.last_message_sent = Serializable.Enemy.Enemy()
+        self.time_since_last_position_sent = time()
 
     def _wander(self):
-        if self.wander_position is None:
-            self._generate_new_wander_position()
         enemy_x, enemy_y = self.enemy.position
-        dst_x, dst_y = self.wander_position
-        if abs(dst_x - enemy_x) <= self.enemy.size and abs(dst_y - enemy_y) <= self.enemy.size:
-            self._generate_new_wander_position()
-        dst_x, dst_y = self.wander_position
+        dst_x, dst_y = self.target_position
         vector = [dst_x - enemy_x, dst_y - enemy_y]
         normalized = [copysign(1, vector[0]), copysign(1, vector[1])]
         if abs(vector[0]) < self.enemy.size:
@@ -37,8 +41,37 @@ class BaseAI(Actor):
         buffer = 4
         room_w = Settings.ROOM_WIDTH
         room_h = Settings.ROOM_WIDTH
-        self.wander_position = [randint(buffer, room_w - buffer), randint(buffer, room_h - buffer)]
-        print(self.wander_position)
+        self.target_position = [randint(buffer, room_w - buffer), randint(buffer, room_h - buffer)]
+
+    def should_change_position(self):
+        if self.target_position is None:
+            return True
+        enemy_x, enemy_y = self.enemy.position
+        dst_x, dst_y = self.target_position
+        if abs(dst_x - enemy_x) <= self.enemy.size and abs(dst_y - enemy_y) <= self.enemy.size:
+            return True
+        return False
+
+    def get_serialized_deltas(self) -> Serializable.Enemy.Enemy | None:
+        """ Creates an object to be sent that contains only necessary differences from the last update. """
+        serialized_deltas = Serializable.Enemy.Enemy(self.my_id, None, None, None)
+        are_any_deltas = False
+        if self.last_message_sent.target_position != self.target_position:
+            serialized_deltas.target_position = list(self.target_position)
+            are_any_deltas = True
+
+        if time() - self.time_since_last_position_sent > 2:  # 2 sec
+            serialized_deltas.position = [int(self.enemy.position[0]), int(self.enemy.position[1])]
+            serialized_deltas.target_position = list(self.target_position)
+            self.time_since_last_position_sent = time()
+            are_any_deltas = True
+
+        if not are_any_deltas:
+            return None
+
+        self.last_message_sent = serialized_deltas
+        return serialized_deltas
 
     def get_serialized(self):
-        return Serializable.Enemy.Enemy(self.enemy.enemy_type, self.enemy.position)
+        """ Creates an object to be sent that contains all information for this enemy """
+        return Serializable.Enemy.Enemy(self.my_id, self.enemy.enemy_type, self.enemy.position)

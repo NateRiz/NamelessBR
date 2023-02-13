@@ -1,7 +1,8 @@
-from Engine.Actor import ActorManager
+from Engine.Actor import ActorManager, Actor
 from Map.MapGenerator import MapGenerator
 from Map.Room import Room
 from Map.RoomFactory import RoomFactory
+from MessageMapper import MessageMapper
 from Player import Player
 from Projectile.Simple import Simple
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
@@ -15,10 +16,22 @@ class Map:
         self.players: dict[int, Player] = {}  # Server owned player object
         self.map_size = 30
 
-    def update(self):
+    def update(self, server):
         ActorManager.server_update_all()
         ActorManager.check_collisions_all()
+        self._send_deltas(server)
         ActorManager.clean_all()
+
+    def _send_deltas(self, server):
+        for room in Actor.find_objects_by_type(Room):  # type: Room
+            player_ids = [player_id for player_id in room.players.keys()]
+            for enemy in room.enemies.values():
+                enemy_update = enemy.get_serialized_deltas()
+                if enemy_update is None:
+                    continue
+                for player_id in player_ids:
+                    server.send({MessageMapper.UPDATE_ENEMY: enemy_update}, player_id)
+
 
     def generate(self, player_ids):
         if self.map:

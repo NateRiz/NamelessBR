@@ -134,6 +134,11 @@ class Actor:
         Actor.actors.add(self)
         Actor.drawable[DrawLayer.NONE].add(self)
 
+    @staticmethod
+    def find_objects_by_type(_type):
+        """ Get proxies to all objects in the world of a specified type"""
+        return [Proxy(actor) for actor in Actor.actors if isinstance(actor, _type)]
+
     def get_world(self):
         """
         Get the world singleton

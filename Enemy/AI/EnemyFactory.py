@@ -6,9 +6,9 @@ from Enemy.Body.Snail import Snail
 
 class EnemyFactory:
     @staticmethod
-    def create(enemy_type: EnemyType) -> BaseAI | None:
+    def create(_id: int, enemy_type: EnemyType) -> BaseAI | None:
         match enemy_type:
             case EnemyType.NONE:
                 return None
             case EnemyType.SNAIL:
-                return Passive.new(Snail.new())
+                return Passive.new(_id, Snail.new())

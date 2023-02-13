@@ -17,7 +17,7 @@ class BaseEnemy(Actor):
         self.max_speed: int = 1
         self.acceleration_rate: float = .2
         self.friction: float = 0.2
-        self.position = [400, 500]
+        self.position = [0, 0]
         self.set_draw_layer(DrawLayer.ENEMY)
         self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
         self.size = 8
