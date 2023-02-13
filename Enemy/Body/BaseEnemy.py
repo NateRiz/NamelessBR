@@ -22,7 +22,8 @@ class BaseEnemy(Actor):
         self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
         self.size = 8
         self.collision_size = 6
-        self.health = 2
+        self.max_health = 2
+        self.health = self.max_health
 
     @property
     def rect(self):
@@ -50,5 +51,13 @@ class BaseEnemy(Actor):
         room = self.get_world().room
         if not room:
             return
-        room.draw_to_room(self.surface, (
-            self.position[0] - self.surface.get_width() // 2, self.position[1] - self.surface.get_height() // 2))
+
+        center_x = self.surface.get_width() // 2
+        center_y = self.surface.get_height() // 2
+
+        health_bar_width = 32
+        health_bar_height = 2
+        pygame.draw.rect(self.surface, (0, 0, 0), (center_x-health_bar_width//2, 0, health_bar_width+2, health_bar_height+2))
+        pygame.draw.rect(self.surface, (255, 0, 0), (center_x-health_bar_width//2+1, 1, int(health_bar_width * (self.health/self.max_health)), health_bar_height))
+
+        room.draw_to_room(self.surface, (self.position[0] - center_x, self.position[1] - center_y))
