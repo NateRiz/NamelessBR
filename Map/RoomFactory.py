@@ -23,5 +23,5 @@ class RoomFactory:
     @staticmethod
     def update_with_change_room_response(room: Room, change_rooms_response: ChangeRoomsResponse):
         """ Called by the client when loading a room"""
-        [room.spawn_projectile(Simple.new(p.position, p.direction)) for p in change_rooms_response.projectiles]
+        [room.spawn_projectile(p.position, p.direction) for p in change_rooms_response.projectiles]
         [room.spawn_enemy(e.my_id, e.enemy_type, *e.position) for e in change_rooms_response.enemies]

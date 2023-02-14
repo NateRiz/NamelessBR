@@ -5,6 +5,8 @@ from Map.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
 from Projectile.Simple import Simple
+from Serializable.DeleteProjectile import DeleteProjectile
+from Serializable.Empty import Empty
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
 
 
@@ -31,6 +33,14 @@ class Map:
                     continue
                 for player_id in player_ids:
                     server.send({MessageMapper.UPDATE_ENEMY: enemy_update}, player_id)
+            remaining_projectiles = {}
+            for id_, proj in room.projectiles.items():
+                if proj.is_destroyed:
+                    for player_id in player_ids:
+                        server.send({MessageMapper.DELETE_PROJECTILE: DeleteProjectile(id_)}, player_id)
+                else:
+                    remaining_projectiles[id_] = proj
+            room.projectiles = remaining_projectiles
 
 
     def generate(self, player_ids):
@@ -95,4 +105,4 @@ class Map:
     def add_projectile(self, player_id: int, shoot_projectile: ShootProjectileRequest):
         y, x = self.players[player_id].map_coordinates
         room = self.map[y][x]
-        room.spawn_projectile(Simple.new(shoot_projectile.position, shoot_projectile.direction))
+        return room.spawn_projectile(shoot_projectile.position, shoot_projectile.direction).my_id

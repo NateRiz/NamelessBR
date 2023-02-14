@@ -10,6 +10,7 @@ from Map.Wall import Wall
 from Player import Player
 from Projectile.Projectile import Projectile
 import Serializable.Enemy
+from Projectile.Simple import Simple
 from Settings import Settings
 
 class Room(Actor):
@@ -23,7 +24,7 @@ class Room(Actor):
         self.doors: dict[int, Door] = {}
         self.players: dict[int, Player] = {}
         self.walls: list[Wall] = []
-        self.projectiles: set[Projectile] = set()
+        self.projectiles: dict[int: Projectile] = {}
         self.enemies: dict[int, BaseAI] = {}
 
     def draw(self, screen):
@@ -96,9 +97,15 @@ class Room(Actor):
         self.players[player_id].free()
         del self.players[player_id]
 
-    def spawn_projectile(self, projectile: Projectile):
-        self.projectiles.add(projectile)
+    def spawn_projectile(self, position, direction):
+        projectile = Simple.new(position, direction)
+        self.projectiles[projectile.my_id] = projectile
         self.add_child(projectile)
+        return projectile
+
+    def remove_projectile(self, my_id: int):
+        if my_id in self.projectiles:
+            self.projectiles[my_id].free()
 
     def spawn_enemy(self, _id, enemy_type, x, y):
         enemy = EnemyFactory.create(_id, enemy_type)
@@ -114,4 +121,6 @@ class Room(Actor):
             enemy.enemy.position = list(enemy_update.position)
         if enemy_update.target_position is not None:
             enemy.target_position = list(enemy_update.target_position)
+        if enemy_update.health is not None:
+            enemy.enemy.health = enemy_update.health
         return

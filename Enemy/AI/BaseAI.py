@@ -58,18 +58,23 @@ class BaseAI(Actor):
         are_any_deltas = False
         if self.last_message_sent.target_position != self.target_position:
             serialized_deltas.target_position = list(self.target_position)
+            self.last_message_sent.target_position = list(self.target_position)
             are_any_deltas = True
 
         if time() - self.time_since_last_position_sent > 2:  # 2 sec
             serialized_deltas.position = [int(self.enemy.position[0]), int(self.enemy.position[1])]
-            serialized_deltas.target_position = list(self.target_position)
+            self.last_message_sent.position = list(serialized_deltas.position)
             self.time_since_last_position_sent = time()
+            are_any_deltas = True
+
+        if self.enemy.health != self.last_message_sent.health:
+            serialized_deltas.health = self.enemy.health
+            self.last_message_sent.health = self.enemy.health
             are_any_deltas = True
 
         if not are_any_deltas:
             return None
 
-        self.last_message_sent = serialized_deltas
         return serialized_deltas
 
     def get_serialized(self):

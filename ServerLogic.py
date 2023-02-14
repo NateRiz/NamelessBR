@@ -107,11 +107,11 @@ class ServerLogic:
 
     def _shoot_projectile(self, _message_type, message, owner):
         request = ShootProjectileRequest().load(message)
-        self.map.add_projectile(owner, request)
+        id_ = self.map.add_projectile(owner, request)
 
-        other_players_in_room = self.map.get_players_in_room(owner)
-        for player in other_players_in_room:
-            self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(request.position, request.direction)}, player)
+        all_players_in_room = self.map.get_players_in_room(owner) + [owner]
+        for player in all_players_in_room:
+            self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(id_, request.position, request.direction)}, player)
 
     def _server_metrics(self, _message_type, message, owner):
         self.server.send({MessageMapper.SERVER_METRICS_RESPONSE: ServerMetricsResponse(len(Actor.actors))}, owner)

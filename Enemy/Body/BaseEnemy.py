@@ -47,6 +47,9 @@ class BaseEnemy(Actor):
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
 
+    def change_health(self, delta):
+        self.health += delta
+
     def draw(self, screen):
         room = self.get_world().room
         if not room:

@@ -84,7 +84,7 @@ class World(metaclass=Singleton):
         Call all actor updates
         """
         Actor.ActorManager.update_all()
-        Actor.ActorManager.check_collisions_all()
+        # Actor.ActorManager.check_collisions_all()
         Actor.ActorManager.clean_all()
 
     def draw(self):
