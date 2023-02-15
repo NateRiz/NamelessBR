@@ -1,8 +1,7 @@
 # Bullet Hell Battle Royale
 
 ### Next
-- Enemy Health
-  - enemy death
+- Enemies heal on room unload. Feature or bug?
 - EXP
   - Exp Particles
 - Death

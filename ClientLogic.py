@@ -6,6 +6,7 @@ from MessageMapper import MessageMapper
 from Networking.Message import Message
 from Projectile.Simple import Simple
 from Serializable.ChangeRoomsResponse import ChangeRoomsResponse
+from Serializable.DeleteEnemy import DeleteEnemy
 from Serializable.DeleteProjectile import DeleteProjectile
 from Serializable.Enemy import Enemy
 from Serializable.InitialSyncResponse import InitialSyncResponse
@@ -32,6 +33,7 @@ class ClientLogic(Actor):
             MessageMapper.SERVER_METRICS_RESPONSE: self._server_metrics,
             MessageMapper.UPDATE_ENEMY: self._update_enemy,
             MessageMapper.DELETE_PROJECTILE: self._delete_projectile,
+            MessageMapper.DELETE_ENEMY: self._delete_enemy,
         })
 
     def update(self):
@@ -84,6 +86,9 @@ class ClientLogic(Actor):
         response = DeleteProjectile().load(message)
         self.get_world().room.remove_projectile(response.my_id)
 
+    def _delete_enemy(self, _message_type: int, message: dict):
+        response = DeleteEnemy().load(message)
+        self.get_world().room.remove_enemy(response.my_id)
 
     def _server_metrics(self, message_type: int, message:dict):
         response = ServerMetricsResponse().load(message)

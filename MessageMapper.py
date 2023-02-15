@@ -21,3 +21,4 @@ class MessageMapper(IntEnum):
     SERVER_METRICS_RESPONSE = 12
     UPDATE_ENEMY = 13
     DELETE_PROJECTILE = 14
+    DELETE_ENEMY=15

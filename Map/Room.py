@@ -107,11 +107,15 @@ class Room(Actor):
         if my_id in self.projectiles:
             self.projectiles[my_id].free()
 
+    def remove_enemy(self, my_id: int):
+        if my_id in self.enemies:
+            self.enemies[my_id].free()
+
     def spawn_enemy(self, _id, enemy_type, x, y):
         enemy = EnemyFactory.create(_id, enemy_type)
         enemy.enemy.position = [x, y]
         self.add_child(enemy)
-        self.enemies[_id] = enemy
+        self.enemies[enemy.my_id] = enemy
 
     def update_enemy(self, enemy_update: Serializable.Enemy.Enemy):
         if enemy_update.my_id not in self.enemies:

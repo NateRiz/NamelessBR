@@ -17,4 +17,4 @@ class RoomProperties:
 
     def update_properties(self, room: Room):
         enemies = [enemy.get_serialized() for enemy in room.enemies.values()]
-        self.enemies = set((enemy.enemy_type, *enemy.position) for enemy in enemies)
+a        self.enemies = set((enemy.enemy_type, *enemy.position) for enemy in enemies)

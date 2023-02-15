@@ -5,6 +5,7 @@ from Map.RoomFactory import RoomFactory
 from MessageMapper import MessageMapper
 from Player import Player
 from Projectile.Simple import Simple
+from Serializable.DeleteEnemy import DeleteEnemy
 from Serializable.DeleteProjectile import DeleteProjectile
 from Serializable.Empty import Empty
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
@@ -27,19 +28,26 @@ class Map:
     def _send_deltas(self, server):
         for room in Actor.find_objects_by_type(Room):  # type: Room
             player_ids = [player_id for player_id in room.players.keys()]
-            for enemy in room.enemies.values():
-                enemy_update = enemy.get_serialized_deltas()
-                if enemy_update is None:
-                    continue
-                for player_id in player_ids:
-                    server.send({MessageMapper.UPDATE_ENEMY: enemy_update}, player_id)
+            remaining_enemies = {}
+            for id_, enemy in room.enemies.items():
+                if enemy.is_alive():
+                    remaining_enemies[id_] = enemy
+                    enemy_update = enemy.get_serialized_deltas()
+                    if enemy_update is None:
+                        continue
+                    for player_id in player_ids:
+                        server.send({MessageMapper.UPDATE_ENEMY: enemy_update}, player_id)
+                else:
+                    for player_id in player_ids:
+                        server.send({MessageMapper.DELETE_ENEMY: DeleteEnemy(id_)}, player_id)
+            room.enemies = remaining_enemies
             remaining_projectiles = {}
             for id_, proj in room.projectiles.items():
-                if proj.is_destroyed:
+                if proj.is_alive():
+                    remaining_projectiles[id_] = proj
+                else:
                     for player_id in player_ids:
                         server.send({MessageMapper.DELETE_PROJECTILE: DeleteProjectile(id_)}, player_id)
-                else:
-                    remaining_projectiles[id_] = proj
             room.projectiles = remaining_projectiles
 
 

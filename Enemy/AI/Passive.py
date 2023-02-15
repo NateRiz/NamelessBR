@@ -9,6 +9,10 @@ class Passive(BaseAI):
         self._wander()
 
     def server_update(self):
+        super().server_update()
+        if self._is_marked_for_deletion:
+            return
+
         if self.should_change_position():
             self._generate_new_wander_position()
         self.update()

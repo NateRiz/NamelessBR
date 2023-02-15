@@ -21,7 +21,7 @@ class BaseEnemy(Actor):
         self.set_draw_layer(DrawLayer.ENEMY)
         self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
         self.size = 8
-        self.collision_size = 6
+        self.collision_size = 8
         self.max_health = 2
         self.health = self.max_health
 

@@ -26,6 +26,10 @@ class BaseAI(Actor):
         self.last_message_sent = Serializable.Enemy.Enemy()
         self.time_since_last_position_sent = time()
 
+    def server_update(self):
+        if self.enemy.health <= 0:
+            self.free()
+
     def _wander(self):
         enemy_x, enemy_y = self.enemy.position
         dst_x, dst_y = self.target_position
