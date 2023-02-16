@@ -4,11 +4,9 @@ from time import time
 
 from PlayerBodyBuilder import PlayerBodyBuilder
 from Engine.Actor import Actor
-from Engine.Camera import Camera
 from Engine.DrawLayer import DrawLayer
 from Map.Door import Door
 from MessageMapper import MessageMapper
-from Projectile.Simple import Simple
 from Serializable.Movement import Movement
 from Serializable.ShootProjectileRequest import ShootProjectileRequest
 from Utility import rot_center, normalize
@@ -74,23 +72,36 @@ class Player(Actor):
         return self.get_world().room
 
     def draw(self, screen):
-        self.draw_player(screen)
+        if self.is_me:
+            self.draw_player(screen)
+        else:
+            self.draw_enemy(screen)
+
+    def draw_enemy(self, screen):
+        # Draw other players directly into the room to later be offset
+        rotated_surface, rect = rot_center(self.surface, self.angle, *self.rect.center)
+        self.get_current_room().get_surface().blit(rotated_surface, rect)
+
+        center_x = self.surface.get_width() // 2
+        health_bar_width = 32
+        health_bar_height = 2
+
+        health_surface = pygame.surface.Surface((health_bar_width, health_bar_height))
+        pygame.draw.rect(health_surface, (0, 0, 0), (center_x-health_bar_width//2, 2, health_bar_width+2, health_bar_height+2))
+        pygame.draw.rect(health_surface, (255, 0, 0), (center_x-health_bar_width//2+1, 3, int(health_bar_width * (self.health/self.max_health)), health_bar_height))
+        self.get_current_room().draw_to_room(health_surface, self.pos)
+
 
     def draw_player(self, screen):
         # My player should always be drawn in the center of the screen. The room is drawn to offset me.
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2
+        mouse_x = pygame.mouse.get_pos()[0]
+        mouse_y = pygame.mouse.get_pos()[1]
+        self.angle = degrees(atan2(mouse_x - center_x, mouse_y - center_y)) + 180
 
-        if self.is_me:
-            mouse_x = pygame.mouse.get_pos()[0]
-            mouse_y = pygame.mouse.get_pos()[1]
-            self.angle = degrees(atan2(mouse_x - center_x, mouse_y - center_y)) + 180
-            rotated_surface, rect = rot_center(self.surface, self.angle, center_x, center_y)
-            screen.blit(rotated_surface, (rect.x, rect.y))
-        else:
-            # Draw other players directly into the room to later be offset
-            rotated_surface, rect = rot_center(self.surface, self.angle, *self.rect.center)
-            self.get_current_room().get_surface().blit(rotated_surface, rect)
+        rotated_surface, rect = rot_center(self.surface, self.angle, center_x, center_y)
+        screen.blit(rotated_surface, (rect.x, rect.y))
 
     def get_pressed_input(self, pressed):
         if not self.is_me:
@@ -195,24 +206,20 @@ class Player(Actor):
 
         src_y, src_x = src
         dest_y, dest_x = dest
-        buffer = 32
+        buffer = 48
         current_room = self.get_current_room()
         if dest_y - src_y == 1:  # move down
             self.pos = list(current_room.doors[Door.NORTH].rect.center)
             self.pos[1] += buffer
-            # self.direction = self.direction_lookup[(0, -1)]
         elif dest_y - src_y == -1:  # move up
             self.pos = list(current_room.doors[Door.SOUTH].rect.center)
             self.pos[1] -= buffer
-            # self.direction = self.direction_lookup[(0, 1)]
         elif dest_x - src_x == 1:  # move right
             self.pos = list(current_room.doors[Door.WEST].rect.center)
             self.pos[0] += buffer
-            # self.direction = self.direction_lookup[(1, 0)]
         elif dest_x - src_x == -1:  # move left
             self.pos = list(current_room.doors[Door.EAST].rect.center)
             self.pos[0] -= buffer
-            # self.direction = self.direction_lookup[(-1, 0)]
 
     def try_shoot(self):
         if time() - self.last_shoot_time > self.shoot_cooldown:

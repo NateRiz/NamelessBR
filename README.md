@@ -7,7 +7,7 @@
 - Death
   - Spectator
 - projectiles hit other players
-- 
+- Implement Camera
 
 
 ### Backlog
@@ -18,4 +18,5 @@
 - Actor overridden functions can be private. ie update
 - Lag simulator
 - Twisted: Look into twisted to replace sockets
-- 
+- FPS: slow fps probably breaks the game. 
+- Moving into door puts you in a weird spot. Think theres an issue with player surface.

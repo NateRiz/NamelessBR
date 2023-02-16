@@ -3,7 +3,7 @@ import pygame
 
 class PlayerBodyBuilder:
     def __init__(self):
-        self.surface = pygame.surface.Surface((32, 32), pygame.SRCALPHA)
+        self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
 
     def add_triangle_base(self) -> 'PlayerBodyBuilder':
         triangle_size: int = 10
