@@ -1,6 +1,3 @@
-from Networking.Serializable import Serializable
-
-
-class ServerMetricsResponse(Serializable):
+class ServerMetricsResponse:
     def __init__(self, actors=None):
         self.actors = actors

@@ -6,7 +6,6 @@ from Engine.Game import Game
 from Engine.DrawLayer import DrawLayer
 from Engine.Proxy import Proxy
 from Engine.Screen import Screen
-from Networking.Serializable import Serializable
 
 
 class ActorManager:
@@ -153,7 +152,7 @@ class Actor:
         """
         return Screen().screen
 
-    def send_to_server(self, message: Dict[int, Serializable]):
+    def send_to_server(self, message):
         """
         Send a message to the server
         :param message: Message to send to server

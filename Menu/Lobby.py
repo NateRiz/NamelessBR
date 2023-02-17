@@ -50,7 +50,7 @@ class Lobby:
                     self.lobby_state.lobby_state = LobbyState.TRANSITION_TO_GAME
                 if MessageMapper.LIST_CLIENTS_RESPONSE in message.message:
                     response = message.message[MessageMapper.LIST_CLIENTS_RESPONSE]
-                    player_ids = ListClientsResponse().load(response).clients
+                    player_ids = response.clients
                     self.player_container.update_players(player_ids)
 
     def draw(self):

@@ -1,7 +1,4 @@
-from Networking.Serializable import Serializable
-
-
-class ChangeRoomsRequest(Serializable):
+class ChangeRoomsRequest:
     """
     Request from a client to switch to a different room
     """

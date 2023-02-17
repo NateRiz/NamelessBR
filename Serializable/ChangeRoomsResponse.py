@@ -1,10 +1,9 @@
-from Networking.Serializable import Serializable
 from Serializable.Enemy import Enemy
 from Serializable.Player import Player
 from Serializable.Projectile import Projectile
 
 
-class ChangeRoomsResponse(Serializable):
+class ChangeRoomsResponse:
     """
     Contains information on how to build a room for the client once they switch to a new room.
     """

@@ -1,7 +1,4 @@
-from Networking.Serializable import Serializable
-
-
-class InitialSyncResponse(Serializable):
+class InitialSyncResponse:
     """
     Syncs parameters at the start of the game for everyone.
     """

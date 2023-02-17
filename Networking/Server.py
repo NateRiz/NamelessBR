@@ -1,4 +1,5 @@
 import json
+import pickle
 import socket
 from threading import Thread
 from typing import Dict
@@ -8,7 +9,6 @@ from collections import deque
 from time import time
 
 from Networking.Message import Message
-from Networking.Serializable import Serializable
 
 
 class Server:
@@ -50,49 +50,45 @@ class Server:
             self.metric_num_bytes = 0
         return round(self.metric_last_kb / 1024, 2)
 
-    def send(self, message: Dict[int, Serializable], owner_id):
+    def send(self, message, owner_id):
         """
         Sends a json serializable object to the specified client
         :param message: JSON serializable object
         :param owner_id: client to send to
         """
-        padded_header, raw_message = self._encode_message(message)
+        encoded_message = self._encode_message(message)
         # print(F"S>{owner_id}: {message}")
 
-        self.clients[owner_id].send(padded_header)
-        self.clients[owner_id].send(raw_message)
+        self.clients[owner_id].send(encoded_message)
 
-    def send_all(self, message: Dict[int, Serializable]):
+    def send_all(self, message):
         """
         Sends a json serializable object to every client
         :param message: JSON serializable object
         """
-        padded_header, raw_message = self._encode_message(message)
+        encoded_message = self._encode_message(message)
         # print(F"SV>A: {message}")
 
         for owner_id, conn in self.clients.items():
-            conn.send(padded_header)
-            conn.send(raw_message)
+            conn.send(encoded_message)
 
-    def send_all_except(self, message: Dict[int, Serializable], excluded_id):
+    def send_all_except(self, message, excluded_id):
         """
         Sends a json serializable object to all except the specific client
         Used when a client doesn't want reflected data to cause jitter
         :param message: JSON serializable object
         :param excluded_id: client to exclude
         """
-        padded_header, raw_message = self._encode_message(message)
-        print(F"SV>A-{excluded_id}: {message}")
+        encoded_message = self._encode_message(message)
         for owner_id, conn in self.clients.items():
             if owner_id != excluded_id:
-                conn.send(padded_header)
-                conn.send(raw_message)
+                conn.send(encoded_message)
 
     def _encode_message(self, message):
-        raw_message = json.dumps(message, default=Serializable.serialize)
+        raw_message = pickle.dumps(message)
         message_size = len(raw_message)
-        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
-        return padded_header.encode(), raw_message.encode()
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE).encode()
+        return padded_header + raw_message
 
     def _listen(self):
         max_connections = 5
@@ -122,9 +118,9 @@ class Server:
         message_size = int(header.strip())
         data = self._get_bytes_from_stream(message_size, client, incoming_stream)
         self.metric_num_bytes += len(data)
-        return json.loads(data)
+        return pickle.loads(data)
 
-    def _get_bytes_from_stream(self, num_bytes, client, incoming_stream: deque) -> str:
+    def _get_bytes_from_stream(self, num_bytes, client, incoming_stream: deque) -> bytes:
         buffer = []
         while num_bytes > 0:
             if len(incoming_stream) == 0:
@@ -142,7 +138,7 @@ class Server:
         if num_bytes < 0:
             print(f"WARNING: remaining bytes are negative: {num_bytes} -- {buffer}")
 
-        return "".join(b.decode() for b in buffer)
+        return b"".join(b for b in buffer)
 
     def _receive_next_packet(self, client, incoming_stream):
         try:

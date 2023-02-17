@@ -1,7 +1,4 @@
-from Networking.Serializable import Serializable
-
-
-class ListClientsResponse(Serializable):
+class ListClientsResponse:
     """
     List of ids for all connected clients
     """

@@ -73,14 +73,12 @@ class ServerLogic:
 
     def _movement(self, message_type, message, owner):
         other_players_in_room = self.map.get_players_in_room(owner)
-        request = Movement().load(message)
-        self.map.move_player_position(owner, request.pos)
+        self.map.move_player_position(owner, message.pos)
         for player in other_players_in_room:
             self.server.send({message_type: message}, player)
 
     def _change_rooms_request(self, _message_type, message, owner):
-        request = ChangeRoomsRequest().load(message)
-        if not ServerValidator.validate_change_rooms(self.map.players[owner].map_coordinates, request.destination):
+        if not ServerValidator.validate_change_rooms(self.map.players[owner].map_coordinates, message.destination):
             return
 
         # Get players in last room
@@ -106,12 +104,11 @@ class ServerLogic:
                 master_room.coordinates, players, projectiles, enemies)}, player)
 
     def _shoot_projectile(self, _message_type, message, owner):
-        request = ShootProjectileRequest().load(message)
-        id_ = self.map.add_projectile(owner, request)
+        id_ = self.map.add_projectile(owner, message)
 
         all_players_in_room = self.map.get_players_in_room(owner) + [owner]
         for player in all_players_in_room:
-            self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(id_, request.position, request.direction)}, player)
+            self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(id_, message.position, message.direction)}, player)
 
     def _server_metrics(self, _message_type, message, owner):
         self.server.send({MessageMapper.SERVER_METRICS_RESPONSE: ServerMetricsResponse(len(Actor.actors))}, owner)

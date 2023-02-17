@@ -1,5 +1,4 @@
-import sys
-import json
+import pickle
 import socket
 from collections import deque
 from threading import Thread
@@ -8,7 +7,6 @@ from typing import Dict
 
 from Networking.AtomicDeque import AtomicDeque
 from Networking.Message import Message
-from Networking.Serializable import Serializable
 from Networking.Server import Server
 
 
@@ -40,18 +38,15 @@ class Client:
         print("Client started..")
         Thread(target=self._poll).start()
 
-    def send(self, message: Dict[int, Serializable]):
+    def send(self, message):
         """
         Sends a json serializable object to the server
         :param message: JSON serializable object
         """
-        raw_message = json.dumps(message, default=Serializable.serialize)
+        raw_message = pickle.dumps(message)
         message_size = len(raw_message)
-        padded_header = str(message_size).ljust(Server.HEADER_SIZE)
-        if '{"3":' not in raw_message:
-            print(f"C > {raw_message}")
-        self.socket.send(padded_header.encode())
-        self.socket.send(raw_message.encode())
+        padded_header = str(message_size).ljust(Server.HEADER_SIZE).encode()
+        self.socket.send(padded_header+raw_message)
 
     def get_next_message(self) -> Message | None:
         """
@@ -81,18 +76,18 @@ class Client:
         incoming_stream = deque()
         while True:
             message = self._get_next_message(incoming_stream)
-            if "w{'3':" not in str(message):
-                print(F"C < {message}")
             self.message_queue.append(Message(-1, message))
 
     def _get_next_message(self, incoming_stream) -> dict:
         header = self._get_bytes_from_stream(Server.HEADER_SIZE, incoming_stream)
-        message_size = int(header.strip())
+        print("C<",header.decode())
+        message_size = int(header.decode().strip())
         data = self._get_bytes_from_stream(message_size, incoming_stream)
+        print("C<",data)
         self.metric_num_bytes += len(data)
-        return json.loads(data)
+        return pickle.loads(data)
 
-    def _get_bytes_from_stream(self, num_bytes, incoming_stream: deque) -> str:
+    def _get_bytes_from_stream(self, num_bytes, incoming_stream: deque) -> bytes:
         buffer = []
         while num_bytes > 0:
             if len(incoming_stream) == 0:
@@ -110,7 +105,7 @@ class Client:
         if num_bytes < 0:
             print(f"WARNING: remaining bytes are negative: {num_bytes} -- {buffer}")
 
-        return "".join(b.decode() for b in buffer)
+        return b"".join(b for b in buffer)
 
     def _receive_next_packet(self, incoming_stream):
         try:

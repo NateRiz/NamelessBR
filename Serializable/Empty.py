@@ -1,7 +1,4 @@
-from Networking.Serializable import Serializable
-
-
-class Empty(Serializable):
+class Empty:
     """
     Empty class when nothing is needed to be sent over the socket
     """

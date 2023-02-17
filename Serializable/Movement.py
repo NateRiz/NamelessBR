@@ -1,7 +1,4 @@
-from Networking.Serializable import Serializable
-
-
-class Movement(Serializable):
+class Movement:
     """
     Player movement information
     """
