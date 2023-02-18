@@ -33,14 +33,15 @@ class Player(Actor):
         self.angle = 0
 
         # Replace this with a surface that always looks where the mouse is pointing.
-        self.surface = PlayerBodyBuilder().add_triangle_base().build()
+        self.surface = pygame.surface.Surface((64, 64), pygame.SRCALPHA)
+        self.player_surface = PlayerBodyBuilder(self.surface.get_width()).add_triangle_base().build()
 
-        self.dash_cooldown: int = 2
+        self.dash_cooldown: float = 1.5
         self.dash_impulse_force: int = 25
         self.dash_last_time = time()
         self.is_dashing: bool = False
 
-        self.shoot_cooldown = 0.8
+        self.shoot_cooldown = 0.4
         self.last_shoot_time = time()
         self.is_shot_queued = False  # Signifies that next update should spawn a shot (Don't add logic to poll())
 
@@ -62,6 +63,10 @@ class Player(Actor):
                                 *self.collision_size)
 
     @property
+    def debug_surface(self):
+        return pygame.rect.Rect(*self.pos, *self.surface.get_size())
+
+    @property
     def offset_position(self):
         center_x = self.get_screen().get_size()[0] // 2
         center_y = self.get_screen().get_size()[1] // 2
@@ -72,6 +77,7 @@ class Player(Actor):
         return self.get_world().room
 
     def draw(self, screen):
+        self.surface.fill((0, 0, 0, 0))
         if self.is_me:
             self.draw_player(screen)
         else:
@@ -79,29 +85,37 @@ class Player(Actor):
 
     def draw_enemy(self, screen):
         # Draw other players directly into the room to later be offset
-        rotated_surface, rect = rot_center(self.surface, self.angle, *self.rect.center)
-        self.get_current_room().get_surface().blit(rotated_surface, rect)
+        surface_center_x = self.surface.get_width() // 2
+        surface_center_y = self.surface.get_height() // 2
+        rotated_surface, rect = rot_center(self.player_surface, self.angle, surface_center_x, surface_center_y)
+        self.surface.blit(rotated_surface, rect)
 
         center_x = self.surface.get_width() // 2
         health_bar_width = 32
         health_bar_height = 2
 
         health_surface = pygame.surface.Surface((health_bar_width, health_bar_height))
-        pygame.draw.rect(health_surface, (0, 0, 0), (center_x-health_bar_width//2, 2, health_bar_width+2, health_bar_height+2))
-        pygame.draw.rect(health_surface, (255, 0, 0), (center_x-health_bar_width//2+1, 3, int(health_bar_width * (self.health/self.max_health)), health_bar_height))
-        self.get_current_room().draw_to_room(health_surface, self.pos)
-
+        pygame.draw.rect(health_surface, (0, 0, 0),
+                         (center_x - health_bar_width // 2, 2, health_bar_width + 2, health_bar_height + 2))
+        pygame.draw.rect(health_surface, (255, 0, 0), (
+            center_x - health_bar_width // 2 + 1, 3, int(health_bar_width * (self.health / self.max_health)),
+            health_bar_height))
+        # self.get_current_room().draw_to_room(health_surface, self.pos)
+        self.get_current_room().draw_to_room(self.surface, self.pos)
 
     def draw_player(self, screen):
         # My player should always be drawn in the center of the screen. The room is drawn to offset me.
-        center_x = self.get_screen().get_size()[0] // 2
-        center_y = self.get_screen().get_size()[1] // 2
-        mouse_x = pygame.mouse.get_pos()[0]
-        mouse_y = pygame.mouse.get_pos()[1]
-        self.angle = degrees(atan2(mouse_x - center_x, mouse_y - center_y)) + 180
+        screen_center_x = self.get_screen().get_width() // 2
+        screen_center_y = self.get_screen().get_height() // 2
+        surface_center_x = self.surface.get_width() // 2
+        surface_center_y = self.surface.get_height() // 2
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
-        rotated_surface, rect = rot_center(self.surface, self.angle, center_x, center_y)
-        screen.blit(rotated_surface, (rect.x, rect.y))
+        self.angle = degrees(atan2(mouse_x - screen_center_x, mouse_y - screen_center_y)) + 180
+        rotated_surface, rect = rot_center(self.player_surface, self.angle, surface_center_x, surface_center_y)
+        self.surface.blit(rotated_surface, rect)
+
+        screen.blit(self.surface, (screen_center_x - surface_center_x, screen_center_y - surface_center_y))
 
     def get_pressed_input(self, pressed):
         if not self.is_me:

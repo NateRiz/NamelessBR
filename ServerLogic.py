@@ -22,7 +22,7 @@ class ServerLogic:
     """
     def __init__(self, server):
         self.server = server
-        self.callback_map: DefaultDict[int, Callable[[int, dict, int], None]] = defaultdict(
+        self.callback_map: DefaultDict[int, Callable[[int, object, int], None]] = defaultdict(
             lambda: self._unknown)
         self.callback_map.update({
             MessageMapper.MOVEMENT: self._movement,
@@ -71,13 +71,13 @@ class ServerLogic:
              MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(master_room.coordinates, serialized, [], enemies)},
             owner)
 
-    def _movement(self, message_type, message, owner):
+    def _movement(self, message_type, message: Movement, owner):
         other_players_in_room = self.map.get_players_in_room(owner)
         self.map.move_player_position(owner, message.pos)
         for player in other_players_in_room:
             self.server.send({message_type: message}, player)
 
-    def _change_rooms_request(self, _message_type, message, owner):
+    def _change_rooms_request(self, _message_type, message: ChangeRoomsRequest, owner):
         if not ServerValidator.validate_change_rooms(self.map.players[owner].map_coordinates, message.destination):
             return
 
@@ -92,7 +92,7 @@ class ServerLogic:
             self.server.send({MessageMapper.LEAVE_ROOM_RESPONSE: LeaveRoomResponse(owner)}, player)
 
         # Change the players room
-        self.map.change_player_room(owner, request.destination)
+        self.map.change_player_room(owner, message.destination)
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
         all_player_ids = self.map.get_players_in_room(owner) + [owner]
@@ -103,14 +103,14 @@ class ServerLogic:
             self.server.send({MessageMapper.CHANGE_ROOMS_RESPONSE: ChangeRoomsResponse(
                 master_room.coordinates, players, projectiles, enemies)}, player)
 
-    def _shoot_projectile(self, _message_type, message, owner):
+    def _shoot_projectile(self, _message_type, message: ShootProjectileRequest, owner):
         id_ = self.map.add_projectile(owner, message)
 
         all_players_in_room = self.map.get_players_in_room(owner) + [owner]
         for player in all_players_in_room:
             self.server.send({MessageMapper.SHOOT_PROJECTILE_RESPONSE: ShootProjectileResponse(id_, message.position, message.direction)}, player)
 
-    def _server_metrics(self, _message_type, message, owner):
+    def _server_metrics(self, _message_type, _message, owner):
         self.server.send({MessageMapper.SERVER_METRICS_RESPONSE: ServerMetricsResponse(len(Actor.actors))}, owner)
 
     def _unknown(self, message_type, message, owner):

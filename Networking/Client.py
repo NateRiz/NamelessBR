@@ -80,10 +80,8 @@ class Client:
 
     def _get_next_message(self, incoming_stream) -> dict:
         header = self._get_bytes_from_stream(Server.HEADER_SIZE, incoming_stream)
-        print("C<",header.decode())
         message_size = int(header.decode().strip())
         data = self._get_bytes_from_stream(message_size, incoming_stream)
-        print("C<",data)
         self.metric_num_bytes += len(data)
         return pickle.loads(data)
 
@@ -115,3 +113,5 @@ class Client:
         except ConnectionError as e:
             print(f"Connection removed with {socket.gethostbyname(socket.gethostname())}")
             raise e
+        except Exception as e:
+            print(F"Client Error: ", e)

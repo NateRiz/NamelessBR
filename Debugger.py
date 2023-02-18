@@ -77,6 +77,11 @@ class Debugger(Actor):
                 offset_y = player.offset_position[1] + actor.rect.y
                 rect = pygame.rect.Rect(offset_x, offset_y, actor.rect.w, actor.rect.h)
                 pygame.draw.rect(screen, (255, 0, 100), rect, 1)
+            if hasattr(actor, "debug_surface"):
+                offset_x = player.offset_position[0] + actor.debug_surface.x
+                offset_y = player.offset_position[1] + actor.debug_surface.y
+                pygame.draw.rect(screen, (0, 255, 100), (offset_x,offset_y, *actor.debug_surface.size), 1)
+
 
     def _draw_panel(self, screen):
         """
