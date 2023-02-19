@@ -13,7 +13,7 @@ class Ground(Actor):
         self.set_draw_layer(DrawLayer.GROUND)
         self.surface = surface
 
-    def draw(self, screen):
+    def _draw(self, screen):
         """
         Clears the surface and draws the bottom layer ground.
         :param screen: pygame screen to draw to

@@ -28,7 +28,7 @@ class Debugger(Actor):
         self.server_metrics = None
 
     @debug
-    def update(self):
+    def _update(self):
         """
         Updates metrics every frame
         """
@@ -50,7 +50,7 @@ class Debugger(Actor):
         self.metrics["Server Actors"] = F"{self.server_metrics.actors}"
 
     @debug
-    def draw(self, screen):
+    def _draw(self, screen):
         self._draw_grid(screen)
         self._draw_panel(screen)
         self._draw_collision(screen)
@@ -68,7 +68,6 @@ class Debugger(Actor):
 
     def _draw_collision(self, screen):
         player = self.get_world().get_my_player()
-        room = self.get_world().room
         if not player:
             return
         for actor in self.actors:
@@ -103,7 +102,6 @@ class Debugger(Actor):
         # Draw actor list
         top = 8 + (len(self.metrics.items()) + 1) * 2 * self.font.get_height()
         panel_size = panel.get_size()
-        bot = panel_size[1] - 8
         sorted_counts = sorted(Counter([(str(type(i))) for i in Actor.actors]).items(), key=lambda x: (-x[1], x[0]))
         for i, (cls, count) in enumerate(sorted_counts):
             text = self.font.render(F'{cls[cls.rfind(".")+1: cls.rfind(">")-1]}: {count}', True, (255, 255, 255))

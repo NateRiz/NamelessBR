@@ -54,14 +54,12 @@ class BaseEnemy(Actor):
     def change_health(self, delta):
         self.health += delta
 
-    def draw(self, screen):
+    def _draw(self, screen):
         room = self.get_world().room
         if not room:
             return
 
         center_x = self.surface.get_width() // 2
-        center_y = self.surface.get_height() // 2
-
         health_bar_width = 32
         health_bar_height = 2
         pygame.draw.rect(self.surface, (0, 0, 0),

@@ -1,5 +1,5 @@
 import weakref
-from typing import List, Dict
+from typing import List
 
 from Engine.CollisionLayer import CollisionLayer
 from Engine.Game import Game
@@ -19,7 +19,7 @@ class ActorManager:
         """
         for layer in Actor.drawable:
             for actor in layer:
-                actor.draw(Screen().screen)
+                actor._draw(Screen().screen)
 
     @staticmethod
     def update_all():
@@ -28,14 +28,14 @@ class ActorManager:
         """
         actors_to_update = list(Actor.actors)
         for actor in actors_to_update:
-            actor.update()
+            actor._update()
 
     @staticmethod
     def server_update_all():
         """ Call the server update function on all actors"""
         actors_to_update = list(Actor.actors)
         for actor in actors_to_update:
-            actor.server_update()
+            actor._server_update()
 
 
     @staticmethod
@@ -45,7 +45,7 @@ class ActorManager:
         """
         actors_to_update = list(Actor.actors)
         for actor in actors_to_update:
-            actor.poll_input(event)
+            actor._poll_input(event)
 
     @staticmethod
     def get_pressed_input_all(pressed):
@@ -55,16 +55,17 @@ class ActorManager:
         """
         actors_to_update = list(Actor.actors)
         for actor in actors_to_update:
-            actor.get_pressed_input(pressed)
+            actor._get_pressed_input(pressed)
 
     @staticmethod
     def check_collisions_all():
         """Checks for collisions for all objects that have a collision mask"""
         for actor in Actor.actors:
-            actor.check_collisions()
+            actor._check_collisions()
 
     @staticmethod
     def clean_all():
+        """Deletes all actors that have been marked for deletion"""
         Actor.actors = set(filter(lambda a: not a._is_marked_for_deletion, Actor.actors))
 
 
@@ -92,7 +93,7 @@ class Actor:
     def new(cls, *args, **kwargs):
         """
         The factory method for creating actors. init is disabled for actors. References are stored in the static actors
-        set. Everything else uses weakrefs which is ignored by gc.
+        set. Everything else uses weakrefs which is ignored by gc
         :param args: init args
         :param kwargs: init kwargs
         :return: weakref to new object
@@ -171,48 +172,52 @@ class Actor:
         Actor.drawable[self._draw_layer].add(self)
 
     def set_collision_layer(self, layer):
+        """Sets the layer that an object appears in"""
         assert layer != CollisionLayer.NONE, "There is no reason to set collision layer to none"
         assert self._collision_layer == CollisionLayer.NONE, "No support for changing collision layers, yet."
         self._collision_layer = layer
         self.collidable[layer].add(self)
 
     def add_collision_mask(self, mask):
+        """Sets the layer that an object scans for"""
         self._collision_masks.add(mask)
 
-    def update(self):
+    def _update(self):
         """Overridable update placeholder"""
         pass
 
-    def server_update(self):
+    def _server_update(self):
         """ Overridable server update placeholder"""
 
-    def poll_input(self, event):
+    def _poll_input(self, event):
         """Overridable poll placeholder"""
         pass
 
-    def get_pressed_input(self, pressed):
+    def _get_pressed_input(self, pressed):
         """Overridable get pressed keys"""
         pass
 
-    def draw(self, screen):
+    def _draw(self, screen):
         """Overridable draw placeholder"""
         pass
 
-    def on_collide(self, actor: "Actor"):
+    def _on_collide(self, actor: "Actor"):
         """
         Overridable collide placeholder. Called when an object in this object's masks collides with its rect
         :param actor: Actor collided with
         """
         pass
 
-    def check_collisions(self):
+    def _check_collisions(self):
+        """Calls the on_collide function of the actor that got collided with"""
         for mask in self._collision_masks:
             for actor in Actor.collidable[mask]:
                 if self.rect.colliderect(actor.rect):
-                    self.on_collide(actor)
-
+                    self._on_collide(actor)
+    
+    def __del__(self):
+        self._destroy()
 
     def _destroy(self):
         if self in Actor.drawable[self._draw_layer]:
             Actor.drawable[self._draw_layer].remove(self)
-        self.destroy()

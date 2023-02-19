@@ -76,14 +76,14 @@ class Player(Actor):
     def get_current_room(self):
         return self.get_world().room
 
-    def draw(self, screen):
+    def _draw(self, screen):
         self.surface.fill((0, 0, 0, 0))
         if self.is_me:
             self.draw_player(screen)
         else:
             self.draw_enemy(screen)
 
-    def draw_enemy(self, screen):
+    def draw_enemy(self, _screen):
         # Draw other players directly into the room to later be offset
         surface_center_x = self.surface.get_width() // 2
         surface_center_y = self.surface.get_height() // 2
@@ -117,7 +117,7 @@ class Player(Actor):
 
         screen.blit(self.surface, (screen_center_x - surface_center_x, screen_center_y - surface_center_y))
 
-    def get_pressed_input(self, pressed):
+    def _get_pressed_input(self, pressed):
         if not self.is_me:
             return
 
@@ -127,7 +127,7 @@ class Player(Actor):
         if pygame.mouse.get_pressed()[0]:
             self.try_shoot()
 
-    def poll_input(self, event):
+    def _poll_input(self, event):
         if not self.is_me:
             return
 
@@ -137,7 +137,7 @@ class Player(Actor):
             if event.key == pygame.K_F12:
                 self.get_world().toggle_debug()
 
-    def update(self):
+    def _update(self):
         self.move()
         self.shoot()
         self.send_movement_to_server()
@@ -220,7 +220,6 @@ class Player(Actor):
 
         src_y, src_x = src
         dest_y, dest_x = dest
-        print(src, dest)
         current_room = self.get_current_room()
         if dest_y - src_y == 1:  # move down
             self.pos[1] = current_room.doors[Door.NORTH].rect.centery

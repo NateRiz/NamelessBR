@@ -22,8 +22,7 @@ class ClientLogic(Actor):
 
     def __init__(self):
         super().__init__()
-        self.callback_map: DefaultDict[int, Callable[[int, object], None]] = defaultdict(
-            lambda: self._unknown)
+        self.callback_map: DefaultDict[int, Callable[[int, object], None]] = defaultdict(lambda: self._unknown)
         self.callback_map.update({
             MessageMapper.INITIAL_SYNC_RESPONSE: self._initial_sync_response,
             MessageMapper.MOVEMENT: self._movement,
@@ -36,7 +35,7 @@ class ClientLogic(Actor):
             MessageMapper.DELETE_ENEMY: self._delete_enemy,
         })
 
-    def update(self):
+    def _update(self):
         """
         Gets all queued messages from the server and dispatches them.
         """

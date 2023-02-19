@@ -27,7 +27,7 @@ class Room(Actor):
         self.projectiles: dict[int: Projectile] = {}
         self.enemies: dict[int, BaseAI] = {}
 
-    def draw(self, screen):
+    def _draw(self, screen):
         """
         Draw the room in relation to the players offset position.
         Current player should always be in the center.

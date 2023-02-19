@@ -1,4 +1,4 @@
-from math import sqrt, copysign
+from math import copysign
 from time import time
 
 from Enemy.AI.AIState import AIState
@@ -11,6 +11,7 @@ from Settings import Settings
 
 
 class BaseAI(Actor):
+    """Base AI that all AI inherits from"""
     id_incrementer = -1
 
     def __init__(self, _id: int, enemy: BaseEnemy):
@@ -26,7 +27,7 @@ class BaseAI(Actor):
         self.last_message_sent = Serializable.Enemy.Enemy()
         self.time_since_last_position_sent = time()
 
-    def server_update(self):
+    def _server_update(self):
         if self.enemy.health <= 0:
             self.free()
 

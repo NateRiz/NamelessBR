@@ -23,7 +23,7 @@ class Projectile(Actor):
         # Once the object is marked for deletion. This is set to true to tell clients to also destroy it
         self.is_destroyed = False
 
-    def on_collide(self, actor: "Actor"):
+    def _on_collide(self, actor: "Actor"):
         if isinstance(actor, Wall):
             self._on_collide_with_wall(actor)
 

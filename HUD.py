@@ -9,7 +9,7 @@ class HUD(Actor):
         super().__init__()
         self.set_draw_layer(DrawLayer.HUD)
 
-    def draw(self, screen):
+    def _draw(self, screen):
         player = self.get_world().get_my_player()
         if player is None:
             return

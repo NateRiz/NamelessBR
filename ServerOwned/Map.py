@@ -76,7 +76,7 @@ class Map:
         self.map[y][x] = RoomFactory.create([y, x])
         RoomFactory.update_with_room_properties(self.map[y][x], self.map_properties[y][x])
 
-    def unload_room(self, y, x):
+    def unload_room(self, y: int, x: int):
         room = self.map[y][x]
         self.map_properties[y][x].update_properties(room)
         self.map[y][x] = None

@@ -29,18 +29,18 @@ class Door(Actor):
             Door.EAST: pygame.rect.Rect(room_w - self.height, room_h // 2 - self.width // 2, self.height, self.width)
         }[self.direction]
 
-    def update(self):
+    def _update(self):
         player = self.get_world().get_my_player()
         if not player:
             return
         if self.rect.colliderect(player.rect):
             self.send_to_server({MessageMapper.CHANGE_ROOMS_REQUEST: ChangeRoomsRequest(self.connecting_room_coordinates)})
 
-    def draw(self, screen):
+    def _draw(self, screen):
         self._draw_doors()
 
     @debug
-    def poll_input(self, event):
+    def _poll_input(self, event):
         request = {MessageMapper.CHANGE_ROOMS_REQUEST: ChangeRoomsRequest(self.connecting_room_coordinates)}
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN and self.direction == Door.SOUTH:
