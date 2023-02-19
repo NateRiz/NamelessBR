@@ -220,20 +220,16 @@ class Player(Actor):
 
         src_y, src_x = src
         dest_y, dest_x = dest
-        buffer = 48
+        print(src, dest)
         current_room = self.get_current_room()
         if dest_y - src_y == 1:  # move down
-            self.pos = list(current_room.doors[Door.NORTH].rect.center)
-            self.pos[1] += buffer
+            self.pos[1] = current_room.doors[Door.NORTH].rect.centery
         elif dest_y - src_y == -1:  # move up
-            self.pos = list(current_room.doors[Door.SOUTH].rect.center)
-            self.pos[1] -= buffer
+            self.pos[1] = current_room.doors[Door.SOUTH].rect.centery - self.surface.get_height()
         elif dest_x - src_x == 1:  # move right
-            self.pos = list(current_room.doors[Door.WEST].rect.center)
-            self.pos[0] += buffer
+            self.pos[0] = current_room.doors[Door.WEST].rect.centerx
         elif dest_x - src_x == -1:  # move left
-            self.pos = list(current_room.doors[Door.EAST].rect.center)
-            self.pos[0] -= buffer
+            self.pos[0] = current_room.doors[Door.EAST].rect.centerx - self.surface.get_width()
 
     def try_shoot(self):
         if time() - self.last_shoot_time > self.shoot_cooldown:
