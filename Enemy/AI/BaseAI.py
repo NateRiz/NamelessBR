@@ -1,5 +1,6 @@
 from math import copysign
 from time import time
+from typing import Any
 
 from Enemy.AI.AIState import AIState
 from Enemy.Body.BaseEnemy import BaseEnemy
@@ -24,14 +25,14 @@ class BaseAI(Actor):
         self.enemy = enemy
         self.ai_state = AIState.NONE
         self.target_position: list[int] = list(self.enemy.position)
-        self.last_message_sent = Serializable.Enemy.Enemy()
+        self.last_message_sent = Serializable.Enemy.Enemy(None, None, None, None, None)
         self.time_since_last_position_sent = time()
 
     def _server_update(self):
         if self.enemy.health <= 0:
             self.free()
 
-    def _wander(self):
+    def _move_to_current_target(self):
         enemy_x, enemy_y = self.enemy.position
         dst_x, dst_y = self.target_position
         vector = [dst_x - enemy_x, dst_y - enemy_y]
@@ -57,21 +58,24 @@ class BaseAI(Actor):
             return True
         return False
 
-    def get_serialized_deltas(self) -> Serializable.Enemy.Enemy | None:
+    def get_serialized_deltas(self) -> Any:
         """ Creates an object to be sent that contains only necessary differences from the last update. """
-        serialized_deltas = Serializable.Enemy.Enemy(self.my_id, None, None, None)
+        serialized_deltas = Serializable.Enemy.Enemy(self.my_id, None, None, None, None)
         are_any_deltas = False
+        # Change in targeted position
         if self.last_message_sent.target_position != self.target_position:
             serialized_deltas.target_position = list(self.target_position)
             self.last_message_sent.target_position = list(self.target_position)
             are_any_deltas = True
 
+        # Change in actual position
         if time() - self.time_since_last_position_sent > 2:  # 2 sec
             serialized_deltas.position = [int(self.enemy.position[0]), int(self.enemy.position[1])]
             self.last_message_sent.position = list(serialized_deltas.position)
             self.time_since_last_position_sent = time()
             are_any_deltas = True
 
+        # Change in enemy health
         if self.enemy.health != self.last_message_sent.health:
             serialized_deltas.health = self.enemy.health
             self.last_message_sent.health = self.enemy.health
@@ -84,4 +88,12 @@ class BaseAI(Actor):
 
     def get_serialized(self):
         """ Creates an object to be sent that contains all information for this enemy """
-        return Serializable.Enemy.Enemy(self.my_id, self.enemy.enemy_type, self.enemy.position)
+        return Serializable.Enemy.Enemy(self.my_id, self.enemy.enemy_type, self.enemy.position, None, None)
+
+    def update_from_serialized(self, enemy_update):
+        if enemy_update.position is not None:
+            self.enemy.position = list(enemy_update.position)
+        if enemy_update.target_position is not None:
+            self.target_position = list(enemy_update.target_position)
+        if enemy_update.health is not None:
+            self.enemy.health = enemy_update.health

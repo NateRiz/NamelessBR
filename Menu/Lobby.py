@@ -68,7 +68,7 @@ class Lobby:
         if self._is_connected():
             self.player_container.draw(screen)
         else:
-            self.ip_input._draw(screen)
+            self.ip_input.draw(screen)
 
     def poll_input(self):
         """
@@ -83,7 +83,7 @@ class Lobby:
                 self.start_button.poll_input(event)
 
             if not self._is_connected():
-                self.ip_input._poll_input(event)
+                self.ip_input.poll_input(event)
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.start_button.is_enabled:

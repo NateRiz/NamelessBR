@@ -13,7 +13,7 @@ from Serializable.ShootProjectileRequest import ShootProjectileRequest
 
 class Map:
     def __init__(self):
-        self.map: list[list[Room]] = []
+        self.map: list[list[Room | None]] = []
         self.map_properties = []
         self.end_position = []  # End room coordinate in map
         self.players: dict[int, Player] = {}  # Server owned player object
@@ -78,6 +78,7 @@ class Map:
 
     def unload_room(self, y: int, x: int):
         room = self.map[y][x]
+        assert room is not None, "Tried unloading already unloaded room."
         self.map_properties[y][x].update_properties(room)
         self.map[y][x] = None
         room.free()
@@ -96,7 +97,8 @@ class Map:
         :param player_id: Player id to update
         :param position: position relative to the room
         """
-        self.players[player_id].pos = position
+        if position is not None:
+            self.players[player_id].pos = position
 
     def get_players_in_room(self, player_id) -> list[int]:
         """

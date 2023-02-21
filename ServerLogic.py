@@ -64,7 +64,7 @@ class ServerLogic:
     def _initial_sync_request(self, _message_type, _message, owner):
         y, x = self.map.players[owner].map_coordinates
         master_room = self.map.map[y][x]
-        serialized = {owner: Serializable.Player.Player(self.map.players[owner].pos)}
+        serialized = {owner: Serializable.Player.Player(self.map.players[owner].pos, None)}
         enemies = [e.get_serialized() for e in master_room.enemies.values()]
         self.server.send(
             {MessageMapper.INITIAL_SYNC_RESPONSE: InitialSyncResponse(owner, len(self.map.map)),

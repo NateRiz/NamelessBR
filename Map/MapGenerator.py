@@ -1,6 +1,5 @@
 from math import floor
 import pygame
-from pygame.locals import QUIT
 from random import seed, randint, shuffle
 
 from Enemy.Body.EnemyType import EnemyType
@@ -48,7 +47,8 @@ class MapGenerator:
     def _place_enemies(self):
         for i, row in enumerate(self.map_properties):
             for j, rp in enumerate(row):
-                rp.add_enemy(EnemyType.SNAIL)
+                #rp.add_enemy(EnemyType.SNAIL)
+                rp.add_enemy(EnemyType.CLEFT)
 
     def _get_random_coordinate_on_next_side(self):
         while 1:
@@ -84,7 +84,7 @@ class MapGenerator:
                     player[1] * (buffer + w_size), player[0] * (buffer + h_size), w_size, h_size))
 
             for event in pygame.event.get():
-                if event.type == QUIT:
+                if event.type == pygame.locals.QUIT:
                     pygame.quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:

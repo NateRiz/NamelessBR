@@ -6,7 +6,7 @@ class Passive(BaseAI):
         super().__init__(_id, enemy)
 
     def _update(self):
-        self._wander()
+        self._move_to_current_target()
 
     def _server_update(self):
         super()._server_update()

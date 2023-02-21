@@ -1,5 +1,5 @@
 import weakref
-from typing import List
+from typing import List, Any, TypeVar
 
 from Engine.CollisionLayer import CollisionLayer
 from Engine.Game import Game
@@ -7,11 +7,14 @@ from Engine.DrawLayer import DrawLayer
 from Engine.Proxy import Proxy
 from Engine.Screen import Screen
 
+T = TypeVar('T')
+
 
 class ActorManager:
     """
     Manager for all actors
     """
+
     @staticmethod
     def draw_all():
         """
@@ -36,7 +39,6 @@ class ActorManager:
         actors_to_update = list(Actor.actors)
         for actor in actors_to_update:
             actor._server_update()
-
 
     @staticmethod
     def poll_input_all(event):
@@ -69,8 +71,6 @@ class ActorManager:
         Actor.actors = set(filter(lambda a: not a._is_marked_for_deletion, Actor.actors))
 
 
-
-
 class Actor:
     """
     The base class for all objects created.
@@ -81,7 +81,7 @@ class Actor:
     # Every instance that inherits from Actor. This is the only container that contains true references in this program.
     # Everything else that creates an actor creates a weakref proxy that is ignored by garbage collection. Ensure that
     # an actor is not used after its freed.
-    actors = set()
+    actors: set['Actor'] = set()
     # All drawable objects
     # Indices represent the layer in which we draw to the screen.
     drawable: List[weakref.WeakSet['Actor']] = [weakref.WeakSet() for _ in range(len(DrawLayer))]
@@ -135,7 +135,7 @@ class Actor:
         Actor.drawable[DrawLayer.NONE].add(self)
 
     @staticmethod
-    def find_objects_by_type(_type):
+    def find_objects_by_type(_type: T) -> list[T]:
         """ Get proxies to all objects in the world of a specified type"""
         return [Proxy(actor) for actor in Actor.actors if isinstance(actor, _type)]
 
@@ -214,7 +214,7 @@ class Actor:
             for actor in Actor.collidable[mask]:
                 if self.rect.colliderect(actor.rect):
                     self._on_collide(actor)
-    
+
     def __del__(self):
         self._destroy()
 

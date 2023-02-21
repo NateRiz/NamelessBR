@@ -1,8 +1,11 @@
+from typing import Any, Type, Dict
+
+
 class Singleton(type):
     """
     Singleton metaclass
     """
-    _instances = {}
+    _instances: Dict[Type[Any], Any] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

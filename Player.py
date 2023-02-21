@@ -2,6 +2,7 @@ from math import copysign, atan2, degrees
 import pygame
 from time import time
 
+from Engine.Debug import debug_draw
 from PlayerBodyBuilder import PlayerBodyBuilder
 from Engine.Actor import Actor
 from Engine.DrawLayer import DrawLayer
@@ -62,7 +63,7 @@ class Player(Actor):
                                 self.pos[1] - self.collision_size[1] // 2 + self.surface.get_height() // 2,
                                 *self.collision_size)
 
-    @property
+    @debug_draw((0, 255, 0))
     def debug_surface(self):
         return pygame.rect.Rect(*self.pos, *self.surface.get_size())
 
@@ -183,7 +184,7 @@ class Player(Actor):
             return
 
         should_send_message = False
-        message = Movement(self.my_id)
+        message = Movement(self.my_id, None, None, None)
 
         if self.input != self.last_message_sent.direction:
             message.direction = list(self.input)

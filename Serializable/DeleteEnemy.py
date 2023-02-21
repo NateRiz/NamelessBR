@@ -1,3 +1,3 @@
 class DeleteEnemy:
-    def __init__(self, my_id=None):
+    def __init__(self, my_id):
         self.my_id = my_id

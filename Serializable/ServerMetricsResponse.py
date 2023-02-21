@@ -1,3 +1,3 @@
 class ServerMetricsResponse:
-    def __init__(self, actors=None):
+    def __init__(self, actors):
         self.actors = actors

@@ -5,7 +5,7 @@ import os
 import psutil
 
 from Engine.Actor import Actor
-from Engine.Debug import debug
+from Engine.Debug import debug, DebugShape
 from Engine.DrawLayer import DrawLayer
 from MessageMapper import MessageMapper
 from Serializable.Empty import Empty
@@ -53,7 +53,7 @@ class Debugger(Actor):
     def _draw(self, screen):
         self._draw_grid(screen)
         self._draw_panel(screen)
-        self._draw_collision(screen)
+        self._draw_debug_functions(screen)
 
     def _draw_grid(self, screen):
         w, h = screen.get_size()
@@ -66,20 +66,36 @@ class Debugger(Actor):
         for i in range((w // total) + 1):
             pygame.draw.line(screen, (255, 255, 255), (i * total, h // 2), (i * total + line_size, h // 2), 1)
 
-    def _draw_collision(self, screen):
+    def _draw_collision(self, screen, actor, player):
+        if hasattr(actor, "rect"):
+            offset_x = player.offset_position[0] + actor.rect.x
+            offset_y = player.offset_position[1] + actor.rect.y
+            rect = pygame.rect.Rect(offset_x, offset_y, actor.rect.w, actor.rect.h)
+            pygame.draw.rect(screen, (255, 0, 100), rect, 1)
+
+    def _draw_debug_functions(self, screen):
         player = self.get_world().get_my_player()
         if not player:
             return
+
         for actor in self.actors:
-            if hasattr(actor, "rect"):
-                offset_x = player.offset_position[0] + actor.rect.x
-                offset_y = player.offset_position[1] + actor.rect.y
-                rect = pygame.rect.Rect(offset_x, offset_y, actor.rect.w, actor.rect.h)
-                pygame.draw.rect(screen, (255, 0, 100), rect, 1)
-            if hasattr(actor, "debug_surface"):
-                offset_x = player.offset_position[0] + actor.debug_surface.x
-                offset_y = player.offset_position[1] + actor.debug_surface.y
-                pygame.draw.rect(screen, (0, 255, 100), (offset_x,offset_y, *actor.debug_surface.size), 1)
+            self._draw_collision(screen, actor, player)
+            for name in dir(actor.__class__):
+                func = getattr(actor, name)
+                if not hasattr(func, "_debug"):
+                    continue
+
+                rect = func()
+                offset_x = player.offset_position[0] + rect.x
+                offset_y = player.offset_position[1] + rect.y
+                match func._debug_shape:
+                    case DebugShape.RECTANGLE:
+                        pygame.draw.rect(screen, func._debug, (offset_x, offset_y, rect.w, rect.h), 1)
+                    case DebugShape.CIRCLE:
+                        pygame.draw.circle(screen, func._debug, (offset_x, offset_y), rect.w, 1)
+                    case _:
+                        print(f"Couldn't find debug shape for {func._debug_shape}")
+
 
 
     def _draw_panel(self, screen):

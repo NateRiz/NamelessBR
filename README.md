@@ -8,6 +8,9 @@
   - Spectator
 - projectiles hit other players
 - Implement Camera
+- Enemies
+  - Reactive
+  - laser
 
 
 ### Backlog

@@ -5,6 +5,7 @@ import pygame
 from Enemy.Body.EnemyType import EnemyType
 from Engine.Actor import Actor
 from Engine.CollisionLayer import CollisionLayer
+from Engine.Debug import debug_draw
 from Engine.DrawLayer import DrawLayer
 
 
@@ -27,10 +28,11 @@ class BaseEnemy(Actor):
 
     @property
     def rect(self):
-        return pygame.rect.Rect(self.position[0] - self.collision_size // 2 + self.surface.get_width()//2,
-                                self.position[1] - self.collision_size // 2 + self.surface.get_height()//2, self.collision_size, self.collision_size)
+        return pygame.rect.Rect(self.position[0] - self.collision_size // 2 + self.surface.get_width() // 2,
+                                self.position[1] - self.collision_size // 2 + self.surface.get_height() // 2,
+                                self.collision_size, self.collision_size)
 
-    @property
+    @debug_draw((0, 255, 0))
     def debug_surface(self):
         return pygame.rect.Rect(*self.position, *self.surface.get_size())
 
@@ -65,7 +67,7 @@ class BaseEnemy(Actor):
         pygame.draw.rect(self.surface, (0, 0, 0),
                          (center_x - health_bar_width // 2, 0, health_bar_width + 2, health_bar_height + 2))
         pygame.draw.rect(self.surface, (255, 0, 0), (
-        center_x - health_bar_width // 2 + 1, 1, int(health_bar_width * (self.health / self.max_health)),
-        health_bar_height))
+            center_x - health_bar_width // 2 + 1, 1, int(health_bar_width * (self.health / self.max_health)),
+            health_bar_height))
 
         room.draw_to_room(self.surface, (self.position[0], self.position[1]))

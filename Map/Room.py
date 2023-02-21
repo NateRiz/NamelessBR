@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygame
 
 from Enemy.AI.BaseAI import BaseAI
@@ -117,14 +119,8 @@ class Room(Actor):
         self.add_child(enemy)
         self.enemies[enemy.my_id] = enemy
 
-    def update_enemy(self, enemy_update: Serializable.Enemy.Enemy):
+    def update_enemy(self, enemy_update):
         if enemy_update.my_id not in self.enemies:
             return
         enemy = self.enemies[enemy_update.my_id]
-        if enemy_update.position is not None:
-            enemy.enemy.position = list(enemy_update.position)
-        if enemy_update.target_position is not None:
-            enemy.target_position = list(enemy_update.target_position)
-        if enemy_update.health is not None:
-            enemy.enemy.health = enemy_update.health
-        return
+        enemy.update_from_serialized(enemy_update)

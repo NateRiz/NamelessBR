@@ -62,8 +62,8 @@ class World(metaclass=Singleton):
             self.room = RoomFactory.create(change_rooms_response.room_coordinates)
             RoomFactory.update_with_change_room_response(self.room, change_rooms_response)
         [self.room.try_add_player(player_id, player) for player_id, player in change_rooms_response.players.items()]
-        if self.get_my_player() is not None:
-            self.get_my_player().update_position_in_new_room(src, change_rooms_response.room_coordinates)
+        if player := self.get_my_player():
+            player.update_position_in_new_room(src, change_rooms_response.room_coordinates)
 
     def get_pressed_input(self, pressed):
         """
